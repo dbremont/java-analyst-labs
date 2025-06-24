@@ -23,3 +23,11 @@ Record the execution
 
 TODO:
 - Log Parsing
+
+## HCI  Analytics
+
+> This lab explores how users interact with digital systems by collecting and analyzing behavioral, visual, and input data. The goal is to improve usability, design, and overall user experience through data-driven insights.
+
+## References
+
+- [UI Analytics](https://righteous-guardian-68f.notion.site/UI-Analytics-16ec0f5171ec808286ecdc67493f9ea3?source=copy_link)
