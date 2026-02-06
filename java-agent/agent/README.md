@@ -2,6 +2,13 @@
 
 > Note check the Byte Code Compatiblity of the ASM Lib Version. I Have tested for Java 8 and 11; failed for 25.
 
+
+## Compile
+
+```bash
+mvn install
+```
+
 ## Run
 
 ```bash
