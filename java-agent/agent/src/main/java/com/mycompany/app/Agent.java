@@ -38,6 +38,16 @@ public class Agent {
         }
 
         inst.addTransformer(new NullPointerTransformer(), true);
+        inst.addTransformer(new TimingTransformer(), true);
+
+        // Initialize the timing helper
+        try {
+            com.mycompany.app.TimerHelper.init();
+            System.out.println("✅ TimerHelper initialized");
+        } catch (Exception e) {
+            System.err.println("❌ Failed to initialize TimerHelper: " + e.getMessage());
+            e.printStackTrace();
+        }
 
         try {
             // Force transformation for the Java base system classes loaded from 'jrt:/' path

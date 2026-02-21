@@ -11,7 +11,7 @@ public class NullPointerMethodVisitor extends MethodVisitor {
     @Override
     public void visitInsn(int opcode) {
         if (opcode == Opcodes.RETURN) {
-            mv.visitLdcInsn("com.mycompany.app.Logger");  // Load class name
+            // mv.visitLdcInsn("com.mycompany.app.Logger");  // Load class name
             mv.visitVarInsn(Opcodes.ALOAD, 0); // Load 'this'
 
             // mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com.mycompany.app.Logger", "logException", "(Ljava/lang/Throwable;)V", false); // This did not work; why; becase we in the bytecode the naming format is (/)

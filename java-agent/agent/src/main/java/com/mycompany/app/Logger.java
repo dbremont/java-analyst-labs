@@ -3,6 +3,9 @@ package com.mycompany.app;
 import com.google.gson.GsonBuilder;
 import com.google.gson.Gson;
 import java.util.HashMap;
+import java.io.FileDescriptor;
+import java.io.PrintStream;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 import java.util.Map;
@@ -40,12 +43,17 @@ public class Logger {
             System.out.println("❌ Failure Here");
             System.out.println(jsonString);
             System.out.println("===========");
+            System.out.flush();
 
-            OkHttpJsonSender.send(jsonString, "http://localhost:8080/api/logs");;
+            System.out.println("❌ Failure Here");
+
+            OkHttpJsonSender.send(jsonString, "http://localhost:8081/api/logs");
 
         } catch (Exception ex) {
+            System.out.flush();
+            System.out.println(System.out.checkError());
             System.out.println(ex);
-            ex.printStackTrace();
+            // ex.printStackTrace();
         }
     }
 }
