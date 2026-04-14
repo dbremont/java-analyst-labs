@@ -31,3 +31,4 @@ TODO:
 ## References
 
 - [UI Analytics](https://righteous-guardian-68f.notion.site/UI-Analytics-16ec0f5171ec808286ecdc67493f9ea3?source=copy_link)
+- https://visualvm.github.io/download.html
