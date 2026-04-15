@@ -1,0 +1,6 @@
+className,methodName,descriptor,timestamp,executionTimeNanos,executionTimeMs
+com.sample.app.App,fastMethod,()V,1770425060645,5657,0.005657
+com.sample.app.App,slowMethod,()V,1770425060745,100209253,100.209253
+com.sample.app.App,verySlowMethod,()V,1770425061246,500352758,500.352758
+com.sample.app.App,calculateFactorial,(I)Ljava/math/BigInteger;,1770425061246,19137,0.019137
+com.sample.app.App,main,([Ljava/lang/String;)V,1770425067246,6601212136,6601.212136

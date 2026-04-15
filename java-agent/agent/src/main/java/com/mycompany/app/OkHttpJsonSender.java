@@ -13,7 +13,7 @@ public class OkHttpJsonSender {
                 .build();
 
         try (Response response = client.newCall(request).execute()) {
-            System.out.println("Response: " + response.body().string());
+            // System.out.println("Response: " + response.body().string());
         }
     }
 }
