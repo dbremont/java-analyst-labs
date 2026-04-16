@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Guide | Insight Logs</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0e14;
+      --bg-elevated: #0d1219;
+      --bg-card: #111820;
+      --fg: #e6edf3;
+      --fg-muted: #6b7a8c;
+      --accent: #00d9ff;
+      --accent-dim: rgba(0, 217, 255, 0.15);
+      --border: #1c2836;
+      --info: #00b4d8;
+      --warn: #f0b429;
+      --error: #ff5757;
+      --success: #00c853;
+      --purple: #a78bfa;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      scroll-behavior: smooth;
+    }
+    body {
+      background: 
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 217, 255, 0.08), transparent),
+        linear-gradient(180deg, var(--bg) 0%, var(--bg-elevated) 100%);
+      min-height: 100vh;
+    }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* Navigation */
+    .nav-link {
+      transition: all 0.2s;
+      border-bottom: 2px solid transparent;
+    }
+    .nav-link:hover { color: var(--accent); }
+    .nav-link.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* Content Cards */
+    .guide-card {
+      background: linear-gradient(135deg, var(--bg-card) 0%, rgba(17, 24, 32, 0.5) 100%);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      transition: border-color 0.3s;
+    }
+    .guide-card:hover { border-color: rgba(0, 217, 255, 0.3); }
+
+    .step-number {
+      width: 24px;
+      height: 24px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .badge-info { background: rgba(0, 180, 216, 0.15); color: var(--info); }
+    .badge-warn { background: rgba(240, 180, 41, 0.15); color: var(--warn); }
+    .badge-error { background: rgba(255, 87, 87, 0.15); color: var(--error); }
+
+    .tip-box {
+      background: rgba(0, 217, 255, 0.05);
+      border-left: 3px solid var(--accent);
+      padding: 1rem;
+      border-radius: 0 8px 8px 0;
+      margin: 1rem 0;
+    }
+
+    code {
+      background: rgba(0, 217, 255, 0.1);
+      color: var(--accent);
+      padding: 0.2em 0.4em;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85em;
+    }
+
+    /* Fact table rows */
+    .fact-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 1rem;
+      padding: 0.65rem 0;
+      border-bottom: 1px solid rgba(28, 40, 54, 0.6);
+      align-items: baseline;
+    }
+    .fact-row:last-child { border-bottom: none; }
+    .fact-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--warn);
+      text-align: right;
+      white-space: nowrap;
+    }
+    .fact-label {
+      font-size: 0.875rem;
+      color: var(--fg-muted);
+    }
+    .fact-label strong {
+      color: var(--fg);
+      font-weight: 600;
+    }
+
+    /* Sub-group heading inside fact cards */
+    .fact-subgroup {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--fg-muted);
+      padding: 0.75rem 0 0.35rem 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0.25rem;
+    }
+    .fact-subgroup:first-child { padding-top: 0; }
+
+    /* Comparison bar visual */
+    .scale-bar {
+      height: 6px;
+      border-radius: 3px;
+      background: var(--border);
+      margin-top: 0.3rem;
+      overflow: hidden;
+    }
+    .scale-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: linear-gradient(90deg, var(--warn), #f59e0b);
+      transition: width 0.6s ease;
+    }
+  </style>
+</head>
+<body class="font-sans">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-50 backdrop-blur-xl bg-[rgba(10,14,20,0.9)] border-b border-[var(--border)]">
+    <div class="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <svg class="w-7 h-7 text-[var(--accent)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+        <span class="font-bold">User Guide</span>
+      </div>
+      <nav class="flex gap-6 text-sm text-[var(--fg-muted)]">
+        <a href="#viewer" class="nav-link active pb-1">Stream Viewer</a>
+        <a href="#analytics" class="nav-link pb-1">Analytics</a>
+        <a href="#facts" class="nav-link pb-1">Data Facts</a>
+        <a href="#glossary" class="nav-link pb-1">Glossary</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-6 py-10">
+
+    <!-- INTRO -->
+    <div class="mb-12 text-center">
+      <h1 class="text-3xl font-bold mb-3">Using the Log Intelligence View</h1>
+      <p class="text-[var(--fg-muted)] max-w-2xl mx-auto">
+        This guide explains how to navigate the interface, filter log streams, and interpret the analytics charts to debug issues faster.
+      </p>
+    </div>
+
+    <!-- SECTION 1: STREAM VIEWER -->
+    <section id="viewer" class="mb-16">
+      <h2 class="text-xl font-semibold mb-6 flex items-center gap-2">
+        <span class="w-1.5 h-6 bg-[var(--accent)] rounded-full"></span>
+        The Stream Viewer
+      </h2>
+      <p class="text-[var(--fg-muted)] mb-6">
+        The Stream Viewer is the default tab. It acts like a "live tail" of your server logs, allowing you to search and filter through thousands of entries in real-time.
+      </p>
+
+      <!-- Feature: Search -->
+      <div class="guide-card">
+        <div class="flex gap-4">
+          <div class="step-number">1</div>
+          <div>
+            <h3 class="font-semibold mb-2">The Search Bar</h3>
+            <p class="text-sm text-[var(--fg-muted)] mb-3">
+              Located at the top, the search bar lets you perform full-text search across all log messages.
+            </p>
+            <ul class="text-sm space-y-2 text-[var(--fg-muted)]">
+              <li class="flex items-start gap-2">
+                <span class="text-[var(--accent)] mt-1">•</span>
+                <span><strong>Simple Search:</strong> Type a word like <code>timeout</code> to find all logs containing that term.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-[var(--accent)] mt-1">•</span>
+                <span><strong>Exact Phrase:</strong> Use quotes like <code>"connection refused"</code> to find that exact string.</span>
+              </li>
+            </ul>
+            <div class="tip-box text-xs text-[var(--fg-muted)] mt-3">
+              <strong class="text-[var(--fg)]">Tip:</strong> The search is instant. It updates the list automatically as you type.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature: Filters -->
+      <div class="guide-card">
+        <div class="flex gap-4">
+          <div class="step-number">2</div>
+          <div>
+            <h3 class="font-semibold mb-2">Level Filters</h3>
+            <p class="text-sm text-[var(--fg-muted)] mb-3">
+              Use the filter buttons below the stats cards to narrow down logs by severity.
+            </p>
+            <div class="flex flex-wrap gap-2 mb-3">
+              <span class="badge badge-info">INFO</span>
+              <span class="badge" style="background:rgba(107,122,140,0.2); color:var(--fg-muted);">DEBUG</span>
+              <span class="badge badge-warn">WARN</span>
+              <span class="badge badge-error">ERROR</span>
+            </div>
+            <p class="text-sm text-[var(--fg-muted)]">
+              Clicking <span class="badge badge-error" style="position:relative; top:-1px;">ERROR</span> will hide everything except error messages, making it easy to spot critical failures.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature: Reading Logs -->
+      <div class="guide-card">
+        <div class="flex gap-4">
+          <div class="step-number">3</div>
+          <div>
+            <h3 class="font-semibold mb-2">Reading an Entry</h3>
+            <p class="text-sm text-[var(--fg-muted)] mb-3">
+              Each log entry is formatted for readability:
+            </p>
+            <div class="bg-[var(--bg)] p-3 rounded-lg border border-[var(--border)] font-mono text-xs mb-3">
+              <div class="text-[var(--fg-muted)] mb-1">2025-02-15 10:32:45 <span class="badge badge-error" style="top:0;">ERROR</span> <span class="opacity-60">[com.app.Service]</span></div>
+              <div class="text-[var(--fg)]">Failed to connect to database.</div>
+            </div>
+            <ul class="text-sm text-[var(--fg-muted)] space-y-1">
+              <li><strong>Timestamp:</strong> When the event happened.</li>
+              <li><strong>Badge:</strong> The severity level (Info, Warn, Error).</li>
+              <li><strong>Message:</strong> The actual log content.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Feature: Infinite Scroll -->
+      <div class="guide-card">
+        <div class="flex gap-4">
+          <div class="step-number">4</div>
+          <div>
+            <h3 class="font-semibold mb-2">Loading History</h3>
+            <p class="text-sm text-[var(--fg-muted)]">
+              The view loads the most recent logs first. To go further back in time, click the <strong>"Load Older Logs"</strong> button at the bottom of the list.
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- SECTION 2: ANALYTICS -->
+    <section id="analytics" class="mb-16">
+      <h2 class="text-xl font-semibold mb-6 flex items-center gap-2">
+        <span class="w-1.5 h-6 bg-[var(--purple)] rounded-full"></span>
+        The Analytics Dashboard
+      </h2>
+      <p class="text-[var(--fg-muted)] mb-6">
+        Switch to the <strong>Analytics</strong> tab to see the "big picture". This view helps you identify trends, spikes in traffic, and recurring patterns without reading individual lines.
+      </p>
+
+      <!-- Time Resolution -->
+      <div class="guide-card border-l-4 border-l-[var(--purple)]">
+        <h3 class="font-semibold mb-2 flex items-center gap-2">
+          <svg class="w-5 h-5 text-[var(--purple)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Time Resolution (Important)
+        </h3>
+        <p class="text-sm text-[var(--fg-muted)] mb-3">
+          In the top right of the Analytics tab, you will see the Resolution selector: <code>1m</code> <code>5m</code> <code>15m</code> <code>30m</code> <code>1h</code>.
+        </p>
+        <p class="text-sm text-[var(--fg-muted)] mb-3">
+          This controls how time is "collapsed" in the charts.
+        </p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <div class="bg-[var(--bg)] p-3 rounded-lg border border-[var(--border)]">
+            <h4 class="text-xs font-bold text-[var(--accent)] mb-2">High Resolution (1m)</h4>
+            <p class="text-xs text-[var(--fg-muted)]">
+              Shows a data point for <strong>every minute</strong>. Use this to pinpoint the exact minute a server crashed or spiked. The chart will be very wide and requires horizontal scrolling.
+            </p>
+          </div>
+          <div class="bg-[var(--bg)] p-3 rounded-lg border border-[var(--border)]">
+            <h4 class="text-xs font-bold text-[var(--purple)] mb-2">Low Resolution (1h)</h4>
+            <p class="text-xs text-[var(--fg-muted)]">
+              Groups all logs within an <strong>hour</strong> into one point. Use this to see daily traffic patterns. The chart fits on the screen easily.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chart Interaction -->
+      <div class="guide-card">
+        <h3 class="font-semibold mb-2">Interacting with Charts</h3>
+        <p class="text-sm text-[var(--fg-muted)] mb-3">
+          The charts are interactive. Move your mouse over the chart area:
+        </p>
+        <ul class="text-sm text-[var(--fg-muted)] space-y-2">
+          <li class="flex items-center gap-2">
+            <span class="w-1 h-1 rounded-full bg-[var(--accent)]"></span>
+            <span><strong>Crosshair:</strong> A vertical line appears to help you align values.</span>
+          </li>
+          <li class="flex items-center gap-2">
+            <span class="w-1 h-1 rounded-full bg-[var(--accent)]"></span>
+            <span><strong>Tooltip:</strong> A box shows the exact count and time for that point.</span>
+          </li>
+          <li class="flex items-center gap-2">
+            <span class="w-1 h-1 rounded-full bg-[var(--accent)]"></span>
+            <span><strong>Scroll:</strong> If you select "1m" resolution, the chart becomes very wide. Scroll left/right to navigate through history.</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Word Cloud -->
+      <div class="guide-card">
+        <h3 class="font-semibold mb-2">Term Frequency Cloud</h3>
+        <p class="text-sm text-[var(--fg-muted)] mb-3">
+          This visualizes the most common words found in your logs.
+        </p>
+        <ul class="text-sm text-[var(--fg-muted)] space-y-2">
+          <li><strong>Size:</strong> Larger words appear more frequently.</li>
+          <li><strong>Click:</strong> Clicking a word (e.g., "failed") automatically switches you back to the Stream Viewer and searches for that term. This is a fast way to investigate recurring errors.</li>
+        </ul>
+      </div>
+
+      <!-- Patterns -->
+      <div class="guide-card">
+        <h3 class="font-semibold mb-2">Detected Patterns</h3>
+        <p class="text-sm text-[var(--fg-muted)] mb-3">
+          Below the charts, you will see two lists:
+        </p>
+        <div class="flex flex-col md:flex-row gap-4">
+          <div class="flex-1 p-3 bg-[var(--bg)] rounded-lg border border-[var(--border)]">
+            <h4 class="font-mono text-xs text-[var(--accent)] mb-1">Unique Identifiers</h4>
+            <p class="text-xs text-[var(--fg-muted)]">A list of UUIDs found in the logs. Useful for tracking specific request flows.</p>
+          </div>
+          <div class="flex-1 p-3 bg-[var(--bg)] rounded-lg border border-[var(--border)]">
+            <h4 class="font-mono text-xs text-[var(--purple)] mb-1">Form Contexts</h4>
+            <p class="text-xs text-[var(--fg-muted)]">Shows which form contexts are logging the most activity.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: DATA FACTS -->
+    <section id="facts" class="mb-16">
+      <h2 class="text-xl font-semibold mb-2 flex items-center gap-2">
+        <span class="w-1.5 h-6 bg-[var(--warn)] rounded-full"></span>
+        Data Scale Reference
+      </h2>
+      <p class="text-[var(--fg-muted)] mb-6">
+        When you see numbers like "48,291 log entries" or a chart spike at "3,200/min", what does that actually <em>mean</em>? This section gives you the mental yardsticks to interpret log data at a glance.
+      </p>
+
+      <!-- Card 1: Storage / Character Facts -->
+      <div class="guide-card border-l-4 border-l-[var(--warn)]">
+        <h3 class="font-semibold mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-[var(--warn)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          Storage &amp; Characters
+        </h3>
+
+        <div class="fact-subgroup">Text Capacity</div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>1 Byte</strong> = 1 ASCII character (letter, number, space)</span>
+          <span class="fact-value">1 char</span>
+        </div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>1 Kilobyte (KB)</strong> = 1,024 characters</span>
+          <span class="fact-value">~1,024 chars</span>
+        </div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>1 Megabyte (MB)</strong> = 1,048,576 characters</span>
+          <span class="fact-value">~1.05M chars</span>
+        </div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>1 Gigabyte (GB)</strong> = 1,073,741,824 characters</span>
+          <span class="fact-value">~1.07B chars</span>
+        </div>
+
+        <div class="fact-subgroup">Log Lines Per Unit</div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>Typical log line</strong> (timestamp + level + class + message)</span>
+          <span class="fact-value">~120–200 chars</span>
+        </div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>Lines in 1 KB</strong></span>
+          <span class="fact-value">~5–8 lines</span>
+        </div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>Lines in 1 MB</strong></span>
+          <span class="fact-value">~5,000–8,000</span>
+        </div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>Lines in 1 GB</strong></span>
+          <span class="fact-value">~5–8 million</span>
+        </div>
+
+        <div class="tip-box text-xs text-[var(--fg-muted)] mt-4">
+          <strong class="text-[var(--fg)]">Why this matters:</strong> If your log file is 250 MB, you're holding roughly <strong>1.2–2 million lines</strong>. No human can read that. That's exactly why the search bar and filters exist — they are not a convenience, they are a necessity.
+        </div>
+      </div>
+
+      <!-- Card 2: Throughput / Time Facts -->
+      <div class="guide-card border-l-4 border-l-[var(--warn)]">
+        <h3 class="font-semibold mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-[var(--warn)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Throughput &amp; Time
+        </h3>
+
+        <div class="fact-subgroup">How Fast Does Data Pile Up?</div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>10 logs/sec</strong> for 1 hour</span>
+          <span class="fact-value">36,000 lines</span>
+        </div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>100 logs/sec</strong> for 1 hour</span>
+          <span class="fact-value">360,000 lines</span>
+        </div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>1,000 logs/sec</strong> for 1 hour</span>
+          <span class="fact-value">3.6 million</span>
+        </div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>10,000 logs/sec</strong> for 1 hour</span>
+          <span class="fact-value">36 million</span>
+        </div>
+
+        <div class="fact-subgroup">Time to Fill 1 MB at Various Rates</div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>1 log/sec</strong> (quiet service)</span>
+          <span class="fact-value">~83–133 min</span>
+        </div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>100 logs/sec</strong> (moderate load)</span>
+          <span class="fact-value">~50–80 sec</span>
+        </div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>1,000 logs/sec</strong> (high traffic)</span>
+          <span class="fact-value">~5–8 sec</span>
+        </div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>10,000 logs/sec</strong> (peak burst)</span>
+          <span class="fact-value">~0.5–0.8 sec</span>
+        </div>
+
+        <div class="tip-box text-xs text-[var(--fg-muted)] mt-4">
+          <strong class="text-[var(--fg)]">Why this matters:</strong> A chart spike showing "12,400 logs in one minute" means roughly <strong>200 logs/second</strong>. If your baseline is 20/sec, that's a <strong>10× spike</strong> — not just "more logs" but an order-of-magnitude change that usually indicates an error storm or a retry loop.
+        </div>
+      </div>
+
+      <!-- Card 3: Human Reading / Screen Facts -->
+      <div class="guide-card border-l-4 border-l-[var(--warn)]">
+        <h3 class="font-semibold mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-[var(--warn)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          Human Reading Limits
+        </h3>
+
+        <div class="fact-subgroup">Screen &amp; Scrolling</div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>Visible lines</strong> on a typical 1080p monitor (log viewer)</span>
+          <span class="fact-value">~25–35 lines</span>
+        </div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>Pages</strong> to scroll through 10,000 lines</span>
+          <span class="fact-value">~285–400 pages</span>
+        </div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>Time at 1 page/sec</strong> (aggressive skimming)</span>
+          <span class="fact-value">~5–7 minutes</span>
+        </div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>Time at 5 sec/line</strong> (actually reading)</span>
+          <span class="fact-value">~14 hours</span>
+        </div>
+
+        <div class="fact-subgroup">Reading Speed Benchmarks</div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>Average adult</strong> reading prose</span>
+          <span class="fact-value">~250 words/min</span>
+        </div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>Scanning log lines</strong> (not prose — structured data)</span>
+          <span class="fact-value">~12–20 lines/min</span>
+        </div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>Time to read 1,000 log lines</strong> carefully</span>
+          <span class="fact-value">~50–83 minutes</span>
+        </div>
+
+        <div class="tip-box text-xs text-[var(--fg-muted)] mt-4">
+          <strong class="text-[var(--fg)]">Why this matters:</strong> If an incident generated 15,000 error lines, reading them all would take <strong>12–20 hours</strong>. The correct workflow is: filter to ERROR → search for a unique identifier → read only the 10–30 lines that matter. The tools are designed to reduce hours of reading to seconds of searching.
+        </div>
+      </div>
+
+      <!-- Card 4: Chart Resolution Facts -->
+      <div class="guide-card border-l-4 border-l-[var(--warn)]">
+        <h3 class="font-semibold mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-[var(--warn)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Chart Resolution Reference
+        </h3>
+
+        <div class="fact-subgroup">Data Points Per Time Range</div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>1m</strong> resolution over 1 hour</span>
+          <span class="fact-value">60 points</span>
+        </div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>1m</strong> resolution over 24 hours</span>
+          <span class="fact-value">1,440 points</span>
+        </div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>5m</strong> resolution over 24 hours</span>
+          <span class="fact-value">288 points</span>
+        </div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>15m</strong> resolution over 24 hours</span>
+          <span class="fact-value">96 points</span>
+        </div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>1h</strong> resolution over 7 days</span>
+          <span class="fact-value">168 points</span>
+        </div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>1h</strong> resolution over 30 days</span>
+          <span class="fact-value">720 points</span>
+        </div>
+
+        <div class="fact-subgroup">What Resolution Should You Use?</div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>"When exactly did the crash happen?"</strong></span>
+          <span class="fact-value">1m</span>
+        </div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>"Is traffic higher on weekdays?"</strong></span>
+          <span class="fact-value">1h</span>
+        </div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>"Did the deployment at 14:30 cause issues?"</strong></span>
+          <span class="fact-value">5m</span>
+        </div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>"Overall trend this month?"</strong></span>
+          <span class="fact-value">1h</span>
+        </div>
+
+        <div class="tip-box text-xs text-[var(--fg-muted)] mt-4">
+          <strong class="text-[var(--fg)]">Why this matters:</strong> At <code>1m</code> over 24 hours you get 1,440 bars on the chart. That's too many to see at once — the chart becomes a solid block of color. Switch to <code>5m</code> (288 bars) or <code>15m</code> (96 bars) to see the <em>shape</em> of the data. High resolution is for zooming in on a specific hour, not for the full day.
+        </div>
+      </div>
+
+      <!-- Card 5: Network & Transfer Facts -->
+      <div class="guide-card border-l-4 border-l-[var(--warn)]">
+        <h3 class="font-semibold mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-[var(--warn)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+          Network &amp; Transfer
+        </h3>
+
+        <div class="fact-subgroup">How Long to Transfer...</div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>1 MB log file</strong> on a 50 Mbps connection</span>
+          <span class="fact-value">~0.16 sec</span>
+        </div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>100 MB log file</strong> on a 50 Mbps connection</span>
+          <span class="fact-value">~16 sec</span>
+        </div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>1 GB log file</strong> on a 50 Mbps connection</span>
+          <span class="fact-value">~2.7 min</span>
+        </div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>1 GB log file</strong> on a 5 Mbps connection (slow VPN)</span>
+          <span class="fact-value">~27 min</span>
+        </div>
+
+        <div class="fact-subgroup">JSON Overhead</div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>Raw log line</strong> (plain text)</span>
+          <span class="fact-value">~150 chars</span>
+        </div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>Same line as JSON</strong> (with field names, quotes, braces)</span>
+          <span class="fact-value">~250–350 chars</span>
+        </div>
+        <div class="fact-row">
+          <span class="fact-label"><strong>JSON overhead factor</strong></span>
+          <span class="fact-value">~1.7–2.3×</span>
+        </div>
+
+        <div class="tip-box text-xs text-[var(--fg-muted)] mt-4">
+          <strong class="text-[var(--fg)]">Why this matters:</strong> If you're loading logs over a VPN and the page feels slow, it's likely not the app — it's the <strong>2× size penalty of JSON</strong> combined with limited bandwidth. The "Load Older Logs" button fetches in small batches (typically 200–500 rows) specifically to avoid this problem.
+        </div>
+      </div>
+
+      <!-- Card 6: Quick Mental Math Cheatsheet -->
+      <div class="guide-card" style="background: linear-gradient(135deg, rgba(240,180,41,0.06) 0%, var(--bg-card) 60%);">
+        <h3 class="font-semibold mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-[var(--warn)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          Quick Mental Math for Logs
+        </h3>
+        <p class="text-sm text-[var(--fg-muted)] mb-4">
+          Memorize these rough conversions and you can estimate anything on the fly:
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="bg-[var(--bg)] p-3 rounded-lg border border-[var(--border)]">
+            <div class="font-mono text-xs text-[var(--warn)] mb-1">Rule of Thumb</div>
+            <div class="text-sm text-[var(--fg)]"><strong>1 MB ≈ 6,000 lines</strong></div>
+            <div class="text-xs text-[var(--fg-muted)] mt-1">Good enough for back-of-napkin math. Multiply file size in MB by 6K.</div>
+          </div>
+          <div class="bg-[var(--bg)] p-3 rounded-lg border border-[var(--border)]">
+            <div class="font-mono text-xs text-[var(--warn)] mb-1">Rule of Thumb</div>
+            <div class="text-sm text-[var(--fg)]"><strong>100 logs/sec ≈ 1 MB/min</strong></div>
+            <div class="text-xs text-[var(--fg-muted)] mt-1">If your rate display shows ~100/s, you're generating roughly a megabyte per minute.</div>
+          </div>
+          <div class="bg-[var(--bg)] p-3 rounded-lg border border-[var(--border)]">
+            <div class="font-mono text-xs text-[var(--warn)] mb-1">Rule of Thumb</div>
+            <div class="text-sm text-[var(--fg)]"><strong>1 screen ≈ 30 lines</strong></div>
+            <div class="text-xs text-[var(--fg-muted)] mt-1">Divide total lines by 30 to get "how many screens to scroll" — grounds the number.</div>
+          </div>
+          <div class="bg-[var(--bg)] p-3 rounded-lg border border-[var(--border)]">
+            <div class="font-mono text-xs text-[var(--warn)] mb-1">Rule of Thumb</div>
+            <div class="text-sm text-[var(--fg)]"><strong>10× spike = investigate now</strong></div>
+            <div class="text-xs text-[var(--fg-muted)] mt-1">A 2–3× change might be normal variance. 10× almost always means something broke.</div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- SECTION 4: GLOSSARY -->
+    <section id="glossary" class="mb-16">
+      <h2 class="text-xl font-semibold mb-6 flex items-center gap-2">
+        <span class="w-1.5 h-6 bg-[var(--fg-muted)] rounded-full"></span>
+        Quick Glossary
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        <div class="p-3 bg-[var(--bg-card)] rounded-lg border border-[var(--border)]">
+          <strong class="text-[var(--fg)]">FTS</strong>
+          <p class="text-[var(--fg-muted)]">Full-Text Search. The technology powering the instant search bar.</p>
+        </div>
+        <div class="p-3 bg-[var(--bg-card)] rounded-lg border border-[var(--border)]">
+          <strong class="text-[var(--fg)]">Bucket</strong>
+          <p class="text-[var(--fg-muted)]">A time window (like 5 minutes) where logs are grouped together for charts.</p>
+        </div>
+        <div class="p-3 bg-[var(--bg-card)] rounded-lg border border-[var(--border)]">
+          <strong class="text-[var(--fg)]">Keyset Pagination</strong>
+          <p class="text-[var(--fg-muted)]">The method used to load older logs efficiently without slowing down the page.</p>
+        </div>
+        <div class="p-3 bg-[var(--bg-card)] rounded-lg border border-[var(--border)]">
+          <strong class="text-[var(--fg)]">Logger</strong>
+          <p class="text-[var(--fg-muted)]">The class or component in your code that generated the log message.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // Active state logic for nav
+    const sections = document.querySelectorAll('section');
+    const navLinks = document.querySelectorAll('.nav-link');
+
+    window.addEventListener('scroll', () => {
+      let current = "";
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        if (pageYOffset >= sectionTop - 100) {
+          current = section.getAttribute('id');
+        }
+      });
+
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href').includes(current)) {
+          link.classList.add('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
