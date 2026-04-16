@@ -1,3 +1,0 @@
-# Logs File Parser - and Viewwing
-
-Let's create a python script ...
