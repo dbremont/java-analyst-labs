@@ -46,7 +46,7 @@ def create_database():
             message, logger, 
             content='logs', 
             content_rowid='id',
-            tokenize="porter unicode61"
+            tokenize="unicode61"
         )
     ''')
 
