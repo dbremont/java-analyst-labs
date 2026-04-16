@@ -58,12 +58,6 @@
       to { stroke-dashoffset: 0; }
     }
     
-    @keyframes pulse {
-      0% { opacity: 1; }
-      50% { opacity: 0.5; }
-      100% { opacity: 1; }
-    }
-
     .animate-fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }
     
     .log-entry {
@@ -152,8 +146,8 @@
       stroke-width: 2;
       stroke-linecap: round;
       stroke-linejoin: round;
-      stroke-dasharray: 1000;
-      stroke-dashoffset: 1000;
+      stroke-dasharray: 2000;
+      stroke-dashoffset: 2000;
       animation: drawLine 1.5s ease-out forwards;
     }
 
@@ -163,7 +157,54 @@
       animation-delay: 0.5s;
     }
     
-    /* Word Cloud Styles */
+    /* Chart Scroll Container */
+    .chart-scroll-container {
+      position: relative;
+      width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      cursor: crosshair;
+    }
+
+    .chart-scroll-container svg {
+      display: block;
+      min-width: 100%;
+    }
+
+    /* Tooltip Styles */
+    .chart-tooltip {
+      position: absolute;
+      pointer-events: none;
+      transition: opacity 0.15s ease, transform 0.15s ease;
+      background: rgba(13, 18, 25, 0.95);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      z-index: 20;
+      min-width: 140px;
+    }
+    
+    .chart-tooltip::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--purple));
+      border-radius: 8px 8px 0 0;
+    }
+
+    .crosshair-line {
+      stroke: var(--fg-muted);
+      stroke-width: 1;
+      stroke-dasharray: 4 2;
+      opacity: 0.5;
+      transition: opacity 0.2s;
+    }
+    
     .word-cloud-container {
       display: flex;
       flex-wrap: wrap;
@@ -194,35 +235,6 @@
       z-index: 10;
     }
     
-    .word-token.active-search {
-        background: rgba(240, 180, 41, 0.2);
-        border-color: var(--warn);
-        color: var(--warn);
-    }
-    
-    .loading-indicator {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 1rem;
-      color: var(--fg-muted);
-      font-size: 0.875rem;
-    }
-    
-    .spinner {
-      width: 16px;
-      height: 16px;
-      border: 2px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-right: 8px;
-    }
-    
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
     @keyframes fadeArea { from { opacity: 0; } to { opacity: 0.2; } }
 
     @media (prefers-reduced-motion: reduce) {
@@ -344,12 +356,27 @@
 
     <!-- TAB 2: ANALYTICS VIEW -->
     <div id="analytics-view" class="tab-content hidden">
-      <div class="mb-6 flex justify-between items-center">
+      <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 class="text-lg font-semibold">System Analytics</h2>
-        <button id="refreshAnalyticsBtn" class="text-xs px-3 py-1.5 border border-[var(--border)] rounded-md hover:bg-[var(--accent-dim)] hover:border-[var(--accent)] transition-colors flex items-center gap-2">
-           <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-           Refresh
+        
+        <div class="flex items-center gap-4">
+          <!-- Resolution Selector -->
+          <div class="flex items-center gap-2 text-xs">
+            <span class="text-[var(--fg-muted)]">Resolution:</span>
+            <div class="flex border border-[var(--border)] rounded-md overflow-hidden">
+                <button class="res-btn active px-2 py-1 text-xs" data-res="1m">1m</button>
+                <button class="res-btn px-2 py-1 text-xs border-l border-r border-[var(--border)]" data-res="5m">5m</button>
+                <button class="res-btn px-2 py-1 text-xs border-r border-[var(--border)]" data-res="15m">15m</button>
+                <button class="res-btn px-2 py-1 text-xs border-r border-[var(--border)]" data-res="30m">30m</button>
+                <button class="res-btn px-2 py-1 text-xs" data-res="1h">1h</button>
+            </div>
+          </div>
+
+          <button id="refreshAnalyticsBtn" class="text-xs px-3 py-1.5 border border-[var(--border)] rounded-md hover:bg-[var(--accent-dim)] hover:border-[var(--accent)] transition-colors flex items-center gap-2">
+             <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+             Refresh
          </button>
+        </div>
       </div>
 
       <div class="grid grid-cols-1 gap-6">
@@ -362,27 +389,25 @@
               <p class="text-xs text-[var(--fg-muted)] mt-1">Top terms from FTS index (click to filter)</p>
             </div>
           </div>
-          <div id="wordCloud" class="word-cloud-container bg-[var(--bg)] rounded-lg border border-[var(--border)] min-h-[200px]">
-             <!-- Words rendered here -->
-          </div>
+          <div id="wordCloud" class="word-cloud-container bg-[var(--bg)] rounded-lg border border-[var(--border)] min-h-[200px]"></div>
         </div>
 
         <!-- Chart 1: Distribution Line Plot -->
         <div class="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6">
           <div class="mb-4">
             <h3 class="font-semibold">Time Distribution</h3>
-            <p class="text-xs text-[var(--fg-muted)] mt-1">Log lines per minute bucket</p>
+            <p class="text-xs text-[var(--fg-muted)] mt-1">Log lines per bucket (Scroll to navigate)</p>
           </div>
-          <div class="relative h-64 w-full overflow-hidden" id="distributionChartContainer"></div>
+          <div class="chart-scroll-container relative h-64 rounded-lg border border-[var(--border)] bg-[var(--bg)]" id="distributionChartContainer"></div>
         </div>
 
-        <!-- Chart 2: Cumulative Volume (Count vs Size) -->
+        <!-- Chart 2: Cumulative Volume -->
         <div class="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6">
           <div class="mb-4">
               <h3 class="font-semibold">Accumulation: Count vs Size</h3>
               <p class="text-xs text-[var(--fg-muted)] mt-1">Total log lines compared to data volume over time</p>
           </div>
-          <div class="relative h-64 w-full overflow-hidden" id="cumulativeChartContainer"></div>
+          <div class="chart-scroll-container relative h-64 rounded-lg border border-[var(--border)] bg-[var(--bg)]" id="cumulativeChartContainer"></div>
           <div class="flex flex-wrap gap-6 mt-4 text-xs text-[var(--fg-muted)]">
              <div class="flex items-center gap-2">
                  <span class="w-3 h-1 bg-[var(--accent)] rounded-full"></span>
@@ -403,7 +428,9 @@
                     <h3 class="text-md font-semibold text-[var(--accent)]">Unique Identifiers</h3>
                     <span class="font-mono text-sm px-2 py-0.5 rounded bg-[var(--accent-dim)] text-[var(--accent)]" id="uuidCount">0</span>
                 </div>
-                <div id="uuidList" class="space-y-2 max-h-48 overflow-y-auto text-xs font-mono"></div>
+                <div id="uuidList" class="space-y-2 max-h-48 overflow-y-auto text-xs font-mono">
+                    <div class="text-[var(--fg-muted)] text-center py-4">Loading...</div>
+                </div>
             </div>
 
              <!-- Form Contexts -->
@@ -412,7 +439,9 @@
                     <h3 class="text-md font-semibold text-[var(--purple)]">Form Contexts</h3>
                     <span class="font-mono text-sm px-2 py-0.5 rounded bg-[rgba(167,139,250,0.15)] text-[var(--purple)]" id="formCount">0</span>
                 </div>
-                <div id="formList" class="space-y-2 max-h-48 overflow-y-auto"></div>
+                <div id="formList" class="space-y-2 max-h-48 overflow-y-auto">
+                    <div class="text-[var(--fg-muted)] text-center py-4">Loading...</div>
+                </div>
             </div>
         </div>
 
@@ -423,14 +452,15 @@
 
   <script>
     // --- CONFIGURATION ---
-    const API_BASE_URL = 'http://localhost:8000'; // Adjust this if your FastAPI runs elsewhere
+    const API_BASE_URL = 'http://localhost:8000';
 
     // --- STATE ---
     let loadedLogs = [];
     let currentFilter = 'all';
     let searchQuery = '';
-    let lastId = 999999999; // Used for keyset pagination (cursor)
+    let lastId = 999999999;
     let isLoading = false;
+    let currentResolution = '1m'; 
 
     // --- DOM ELEMENTS ---
     const logContainer = document.getElementById('logContainer');
@@ -442,6 +472,7 @@
     const loadMoreBtn = document.getElementById('loadMoreBtn');
     const loadMoreContainer = document.getElementById('loadMoreContainer');
     const refreshAnalyticsBtn = document.getElementById('refreshAnalyticsBtn');
+    const resBtns = document.querySelectorAll('.res-btn');
     
     const totalCountEl = document.getElementById('totalCount');
     const infoCountEl = document.getElementById('infoCount');
@@ -457,9 +488,6 @@
     const wordCloudEl = document.getElementById('wordCloud');
 
     // --- HELPERS ---
-    const uuidPattern = /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi;
-    const formCxtPattern = /Form-->\s*Cxt:-(.*?)\s+Id/gi;
-
     function highlightText(text, query) {
       if (!query) return text;
       return text.replace(new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'), '<span class="highlight">$1</span>');
@@ -474,6 +502,10 @@
         return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
     }
 
+    function formatNumber(num) {
+      return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
     // --- API FUNCTIONS ---
     async function fetchLogs(reset = false) {
       if (isLoading) return;
@@ -481,7 +513,7 @@
       
       if (reset) {
         loadedLogs = [];
-        lastId = 999999999; // Reset cursor
+        lastId = 999999999;
         logContainer.innerHTML = '';
         loadMoreContainer.classList.add('hidden');
       }
@@ -497,7 +529,6 @@
         const text = await response.text();
         const lines = text.trim().split('\n');
         
-        // If empty response
         if (lines.length === 1 && lines[0] === "") {
             if (reset) emptyState.classList.remove('hidden');
             loadMoreContainer.classList.add('hidden');
@@ -509,8 +540,6 @@
         
         if (newLogs.length > 0) {
           loadedLogs = [...loadedLogs, ...newLogs];
-          // The API returns logs DESC (newest first in batch), but we need to paginate older.
-          // The smallest ID in the current batch is the cursor for the next page.
           lastId = Math.min(...newLogs.map(l => l.id));
           
           renderLogs(newLogs, reset);
@@ -527,7 +556,7 @@
         console.error("Error fetching logs:", error);
         if (reset) {
             emptyState.classList.remove('hidden');
-            logContainer.innerHTML = `<div class="p-4 text-center text-[var(--error)]">Connection failed. Is the API running at ${API_BASE_URL}?</div>`;
+            logContainer.innerHTML = `<div class="p-4 text-center text-[var(--error)]">Connection failed.</div>`;
         }
       } finally {
         isLoading = false;
@@ -549,7 +578,7 @@
     async function fetchAnalytics() {
         // Time Distribution
         try {
-            const resp = await fetch(`${API_BASE_URL}/api/analytics/time-distribution`);
+            const resp = await fetch(`${API_BASE_URL}/api/analytics/time-distribution?resolution=${currentResolution}`);
             const json = await resp.json();
             renderCharts(json.data);
         } catch(e) { console.error("Failed to fetch time dist", e); }
@@ -560,17 +589,22 @@
             const json = await resp.json();
             renderWordCloud(json.data);
         } catch(e) { console.error("Failed to fetch word cloud", e); }
+
+        // Patterns (UUIDs & Forms) - NEW
+        try {
+            const resp = await fetch(`${API_BASE_URL}/api/analytics/patterns`);
+            const json = await resp.json();
+            renderPatterns(json);
+        } catch(e) { console.error("Failed to fetch patterns", e); }
     }
 
-    // --- RENDERING ---
-
     function animateNumber(el, target) {
-      const current = parseInt(el.textContent) || 0;
+      const current = parseInt(el.textContent.replace(/,/g, '')) || 0;
       if (current === target) return;
       const duration = 300, start = performance.now();
       function update(now) {
         const progress = Math.min((now - start) / duration, 1);
-        el.textContent = Math.round(current + (target - current) * (1 - Math.pow(1 - progress, 3)));
+        el.textContent = formatNumber(Math.round(current + (target - current) * (1 - Math.pow(1 - progress, 3))));
         if (progress < 1) requestAnimationFrame(update);
       }
       requestAnimationFrame(update);
@@ -593,57 +627,57 @@
     }
 
     function updateViewStats() {
-      filteredCountEl.textContent = loadedLogs.length;
-      
-      // Pattern extraction for local display (UUIDs/Forms) - limited to current view
-      const uuids = new Map();
-      const forms = new Map();
-      loadedLogs.forEach(log => {
-        (log.raw.match(uuidPattern) || []).forEach(m => uuids.set(m, (uuids.get(m) || 0) + 1));
-        let m; const regex = new RegExp(formCxtPattern.source, 'gi');
-        while ((m = regex.exec(log.raw)) !== null) forms.set(m[1].trim(), (forms.get(m[1].trim()) || 0) + 1);
-      });
+      filteredCountEl.textContent = formatNumber(loadedLogs.length);
+    }
 
-      uuidCountEl.textContent = uuids.size;
-      formCountEl.textContent = forms.size;
-      
-      uuidListEl.innerHTML = uuids.size > 0 
-        ? Array.from(uuids.entries()).map(([id, count]) => `
-            <div class="flex justify-between items-center text-[var(--fg-muted)] hover:text-[var(--fg)] p-2 rounded bg-[var(--bg)] border border-[var(--border)]">
-              <span class="truncate">${id}</span>
-              <span class="ml-2 px-2 py-0.5 rounded bg-[var(--accent-dim)] text-[var(--accent)]">${count}</span>
-            </div>`).join('') 
-        : '<p class="text-[var(--fg-muted)] text-xs p-2">No UUIDs in current view</p>';
+    // --- RENDERING ---
 
-      formListEl.innerHTML = forms.size > 0
-        ? Array.from(forms.entries()).map(([ctx, count]) => `
-            <div class="flex justify-between items-center p-2 rounded bg-[var(--bg)] border border-[var(--border)]">
-              <span class="font-mono text-xs text-[var(--fg)] truncate">Form--> Cxt:-<span class="text-[var(--purple)]">${ctx}</span></span>
-              <span class="ml-2 px-2 py-0.5 rounded bg-[rgba(167,139,250,0.15)] text-[var(--purple)]">${count}</span>
-            </div>`).join('') 
-        : '<p class="text-[var(--fg-muted)] text-xs p-2">No Form contexts in current view</p>';
+    function renderPatterns(data) {
+        const uuids = data.uuids || [];
+        const forms = data.forms || [];
+
+        uuidCountEl.textContent = uuids.length;
+        formCountEl.textContent = forms.length;
+
+        uuidListEl.innerHTML = uuids.length > 0 
+            ? uuids.map(u => `
+                <div class="flex justify-between items-center text-[var(--fg-muted)] hover:text-[var(--fg)] p-2 rounded bg-[var(--bg)] border border-[var(--border)]">
+                    <span class="truncate">${u.id}</span>
+                    <span class="ml-2 px-2 py-0.5 rounded bg-[var(--accent-dim)] text-[var(--accent)]">${u.count}</span>
+                </div>`).join('') 
+            : '<p class="text-[var(--fg-muted)] text-xs p-2">No UUIDs found</p>';
+
+        formListEl.innerHTML = forms.length > 0
+            ? forms.map(f => `
+                <div class="flex justify-between items-center p-2 rounded bg-[var(--bg)] border border-[var(--border)]">
+                    <span class="font-mono text-xs text-[var(--fg)] truncate">Form--> Cxt:-<span class="text-[var(--purple)]">${f.context}</span></span>
+                    <span class="ml-2 px-2 py-0.5 rounded bg-[rgba(167,139,250,0.15)] text-[var(--purple)]">${f.count}</span>
+                </div>`).join('') 
+            : '<p class="text-[var(--fg-muted)] text-xs p-2">No Form contexts found</p>';
     }
 
     function renderCharts(dataPoints) {
         if (!dataPoints || dataPoints.length === 0) return;
 
-        // --- Chart 1: DISTRIBUTION ---
-        const w = distributionChartEl.clientWidth;
-        const h = 240;
+        const containerW = distributionChartEl.clientWidth; 
+        const minPixelPerPoint = 3; 
+        const requiredW = Math.max(containerW, dataPoints.length * minPixelPerPoint);
+        
+        const w = requiredW;
+        const h = 264;
         const pad = { top: 20, right: 20, bottom: 30, left: 40 };
+        
         const chartW = w - pad.left - pad.right;
         const chartH = h - pad.top - pad.bottom;
 
         const maxCount = Math.max(...dataPoints.map(d => d.count), 1);
-        
-        // Simple scaling
         const xScale = (i) => pad.left + (i / (dataPoints.length - 1 || 1)) * chartW;
-        const yScale = (v) => pad.top + chartH - (v / maxCount) * chartH;
+        const yScale = (v, max) => pad.top + chartH - (v / max) * chartH;
 
-        let linePath = dataPoints.map((p, i) => `${i===0?'M':'L'} ${xScale(i)} ${yScale(p.count)}`).join(' ');
+        // 1. DISTRIBUTION CHART
+        let linePathDist = dataPoints.map((p, i) => `${i===0?'M':'L'} ${xScale(i)} ${yScale(p.count, maxCount)}`).join(' ');
         
         let gridHtml = '';
-        // Y Grid
         for(let i=0; i<=4; i++) {
             const y = pad.top + (chartH/4)*i;
             const val = Math.round(maxCount * (1 - i/4));
@@ -651,34 +685,51 @@
             gridHtml += `<text x="${pad.left-5}" y="${y+4}" text-anchor="end" fill="var(--fg-muted)" font-size="10" font-family="JetBrains Mono">${val}</text>`;
         }
         
-        // X Labels
-        const labelInterval = Math.ceil(dataPoints.length / 6);
+        const labelW = 60; 
+        const labelsToShow = Math.floor(containerW / labelW);
+        const labelStep = Math.ceil(dataPoints.length / labelsToShow);
+
         dataPoints.forEach((p, i) => {
-            if(i % labelInterval === 0) {
+            if(i % labelStep === 0 || i === dataPoints.length - 1) {
                 const x = xScale(i);
-                // Data format: "YYYY-MM-DD HH:MM"
-                const lbl = p.time.substring(11, 16); // Just HH:mm
+                const lbl = p.time.substring(5, 16); 
                 gridHtml += `<text x="${x}" y="${h-10}" text-anchor="middle" fill="var(--fg-muted)" font-size="10" font-family="JetBrains Mono">${lbl}</text>`;
             }
         });
 
+        const distTooltipHtml = `
+          <div class="chart-tooltip" style="opacity: 0; top: 20px; right: 20px;">
+             <div class="text-xs text-[var(--fg-muted)] mb-1 font-mono" id="dist-tip-time">--</div>
+             <div class="flex items-center gap-2 text-sm font-bold text-[var(--accent)]">
+                <span id="dist-tip-val">0</span> <span class="text-[var(--fg-muted)] font-normal text-xs">lines</span>
+             </div>
+          </div>
+        `;
+
         distributionChartEl.innerHTML = `
-          <svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
-            ${gridHtml}
-            <path d="${linePath}" fill="none" stroke="var(--accent)" stroke-width="2" class="chart-line" />
+          ${distTooltipHtml}
+          <svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+             ${gridHtml}
+             <path d="${linePathDist}" fill="none" stroke="var(--accent)" stroke-width="2" class="chart-line" />
+             <rect x="${pad.left}" y="${pad.top}" width="${chartW}" height="${chartH}" fill="transparent" style="cursor: crosshair;"/>
+             <line id="dist-crosshair" x1="0" y1="${pad.top}" x2="0" y2="${h-pad.bottom}" class="crosshair-line" style="opacity:0;"/>
           </svg>
         `;
 
-        // --- Chart 2: CUMULATIVE (Count vs Size) ---
-        
-        // 1. Prepare Data
-        // If API provides 'size', use it. Otherwise simulate realistic log line sizes for visualization.
+        setupChartInteraction(distributionChartEl, dataPoints, xScale, (d, idx) => {
+            const tipTime = distributionChartEl.querySelector('#dist-tip-time');
+            const tipVal = distributionChartEl.querySelector('#dist-tip-val');
+            tipTime.textContent = d.time;
+            tipVal.textContent = formatNumber(d.count);
+        });
+
+
+        // 2. CUMULATIVE CHART
         const enrichedData = dataPoints.map(p => ({
             ...p,
             size: p.size !== undefined ? p.size : (p.count * (100 + Math.floor(Math.random() * 400))) 
         }));
 
-        // 2. Calculate Cumulative Values
         let cumulativeCount = 0;
         let cumulativeSize = 0;
         const cumulativeData = enrichedData.map(p => {
@@ -687,12 +738,10 @@
             return { time: p.time, count: cumulativeCount, size: cumulativeSize };
         });
 
-        // 3. Scales (Dual Axis)
         const maxCumCount = Math.max(...cumulativeData.map(d => d.count), 1);
         const maxCumSize = Math.max(...cumulativeData.map(d => d.size), 1);
 
-        // Increased right padding for the second axis labels
-        const padCum = { top: 20, right: 55, bottom: 30, left: 45 };
+        const padCum = { top: 20, right: 60, bottom: 30, left: 50 };
         const chartWCum = w - padCum.left - padCum.right;
         const chartHCum = h - padCum.top - padCum.bottom;
 
@@ -700,174 +749,221 @@
         const yCountScale = (v) => padCum.top + chartHCum - (v / maxCumCount) * chartHCum;
         const ySizeScale = (v) => padCum.top + chartHCum - (v / maxCumSize) * chartHCum;
 
-        // 4. Path Generation
-        // Area for Count
         let areaPathCount = `M ${padCum.left} ${padCum.top + chartHCum} `;
         areaPathCount += cumulativeData.map((p, i) => `L ${xScaleCum(i)} ${yCountScale(p.count)}`).join(' ');
         areaPathCount += ` L ${xScaleCum(cumulativeData.length-1)} ${padCum.top + chartHCum} Z`;
 
-        // Line for Count
         let linePathCount = cumulativeData.map((p, i) => `${i===0?'M':'L'} ${xScaleCum(i)} ${yCountScale(p.count)}`).join(' ');
-        
-        // Line for Size
         let linePathSize = cumulativeData.map((p, i) => `${i===0?'M':'L'} ${xScaleCum(i)} ${ySizeScale(p.size)}`).join(' ');
 
-        // 5. Render Grid & Axes
         let gridHtmlCum = '';
-        
-        // Grid lines
         for(let i=0; i<=4; i++) {
             const y = padCum.top + (chartHCum/4)*i;
             gridHtmlCum += `<line x1="${padCum.left}" y1="${y}" x2="${w-padCum.right}" y2="${y}" stroke="var(--grid-line)" stroke-dasharray="2,2"/>`;
         }
 
-        // Left Axis (Count - Cyan)
         for(let i=0; i<=4; i++) {
             const y = padCum.top + (chartHCum/4)*i;
-            const val = Math.round(maxCumCount * (1 - i/4));
-            // Format large numbers (e.g., 10k)
-            let label = val >= 1000 ? (val/1000).toFixed(1) + 'k' : val;
-            gridHtmlCum += `<text x="${padCum.left-8}" y="${y+4}" text-anchor="end" fill="var(--accent)" font-size="10" font-family="JetBrains Mono">${label}</text>`;
+            const valCount = Math.round(maxCumCount * (1 - i/4));
+            const valSize = maxCumSize * (1 - i/4);
+            
+            let lblCount = valCount >= 1000 ? (valCount/1000).toFixed(1) + 'k' : valCount;
+            
+            gridHtmlCum += `<text x="${padCum.left-8}" y="${y+4}" text-anchor="end" fill="var(--accent)" font-size="10" font-family="JetBrains Mono">${lblCount}</text>`;
+            gridHtmlCum += `<text x="${w-padCum.right+8}" y="${y+4}" text-anchor="start" fill="var(--purple)" font-size="10" font-family="JetBrains Mono">${formatBytes(valSize)}</text>`;
         }
 
-        // Right Axis (Size - Purple)
-        for(let i=0; i<=4; i++) {
-            const y = padCum.top + (chartHCum/4)*i;
-            const val = maxCumSize * (1 - i/4);
-            gridHtmlCum += `<text x="${w-padCum.right+8}" y="${y+4}" text-anchor="start" fill="var(--purple)" font-size="10" font-family="JetBrains Mono">${formatBytes(val)}</text>`;
-        }
+        const cumTooltipHtml = `
+          <div class="chart-tooltip" style="opacity: 0; top: 20px; right: 20px;">
+             <div class="text-xs text-[var(--fg-muted)] mb-2 font-mono border-b border-[var(--border)] pb-1" id="cum-tip-time">--</div>
+             <div class="flex flex-col gap-1">
+                <div class="flex items-center gap-2">
+                   <span class="w-2 h-2 rounded-full bg-[var(--accent)]"></span>
+                   <span class="text-xs text-[var(--fg-muted)]">Count:</span>
+                   <span class="text-sm font-bold text-[var(--accent)]" id="cum-tip-count">0</span>
+                </div>
+                <div class="'flex items-center gap-2">
+                   <span class="w-2 h-2 rounded-full bg-[var(--purple)]"></span>
+                   <span class="text-xs text-[var(--fg-muted)]">Size:</span>
+                   <span class="text-sm font-bold text-[var(--purple)]" id="cum-tip-size">0 B</span>
+                </div>
+             </div>
+          </div>
+        `;
 
-        // X Labels
-        const labelIntervalCum = Math.ceil(cumulativeData.length / 6);
-        cumulativeData.forEach((p, i) => {
-            if(i % labelIntervalCum === 0) {
-                const x = xScaleCum(i);
-                const lbl = p.time.substring(11, 16);
-                gridHtmlCum += `<text x="${x}" y="${h-10}" text-anchor="middle" fill="var(--fg-muted)" font-size="10" font-family="JetBrains Mono">${lbl}</text>`;
+        cumulativeChartEl.innerHTML = `
+          ${cumTooltipHtml}
+          <svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+             ${gridHtmlCum}
+             <path d="${areaPathCount}" fill="var(--accent)" class="chart-area" opacity="0.1"/>
+             <path d="${linePathCount}" fill="none" stroke="var(--accent)" stroke-width="2" class="chart-line" />
+             <path d="${linePathSize}" fill="none" stroke="var(--purple)" stroke-width="2" class="chart-line" style="animation-delay: 0.2s" />
+             <rect x="${padCum.left}" y="${padCum.top}" width="${chartWCum}" height="${chartHCum}" fill="transparent" style="cursor: crosshair;"/>
+             <line id="cum-crosshair" x1="0" y1="${padCum.top}" x2="0" y2="${h-padCum.bottom}" class="crosshair-line" style="opacity:0;"/>
+          </svg>
+        `;
+
+        setupChartInteraction(cumulativeChartEl, cumulativeData, xScaleCum, (d, idx) => {
+            const tipTime = cumulativeChartEl.querySelector('#cum-tip-time');
+            const tipCount = cumulativeChartEl.querySelector('#cum-tip-count');
+            const tipSize = cumulativeChartEl.querySelector('#cum-tip-size');
+            tipTime.textContent = d.time;
+            tipCount.textContent = formatNumber(d.count);
+            tipSize.textContent = formatBytes(d.size);
+        });
+    }
+
+    function setupChartInteraction(container, data, xScale, updateFn) {
+        const svg = container.querySelector('svg');
+        const crosshair = container.querySelector('[id$="-crosshair"]');
+        const tooltip = container.querySelector('.chart-tooltip');
+        
+        container.addEventListener('mousemove', (e) => {
+            const rect = container.getBoundingClientRect();
+            const scrollLeft = container.scrollLeft;
+            
+            // Mouse position relative to the SVG content
+            const mouseX = (e.clientX - rect.left) + scrollLeft;
+            
+            // Find nearest data point
+            let bestIdx = 0;
+            let minDist = Infinity;
+            
+            data.forEach((d, i) => {
+                const pointX = xScale(i);
+                const dist = Math.abs(mouseX - pointX);
+                if (dist < minDist) {
+                    minDist = dist;
+                    bestIdx = i;
+                }
+            });
+            
+            const d = data[bestIdx];
+            const pointX = xScale(bestIdx);
+            
+            // Update Crosshair
+            if (crosshair) {
+                crosshair.setAttribute('x1', pointX);
+                crosshair.setAttribute('x2', pointX);
+                crosshair.style.opacity = 0.6;
+            }
+            
+            // Update Tooltip
+            if (tooltip) {
+                updateFn(d, bestIdx);
+                tooltip.style.opacity = 1;
+                
+                // Position tooltip relative to viewport
+                let tipX = (e.clientX - rect.left) + 15;
+                if (tipX + 160 > rect.width) {
+                    tipX = (e.clientX - rect.left) - 160 - 15;
+                }
+                
+                tooltip.style.left = `${tipX}px`;
+                tooltip.style.top = '50px';
             }
         });
 
-        cumulativeChartEl.innerHTML = `
-          <svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
-            <defs>
-                <linearGradient id="gradCountAccum" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" style="stop-color:var(--accent);stop-opacity:0.3" />
-                    <stop offset="100%" style="stop-color:var(--accent);stop-opacity:0" />
-                </linearGradient>
-            </defs>
-            ${gridHtmlCum}
-            <!-- Count Area -->
-            <path d="${areaPathCount}" fill="url(#gradCountAccum)" class="chart-area" />
-            <!-- Count Line -->
-            <path d="${linePathCount}" fill="none" stroke="var(--accent)" stroke-width="2" class="chart-line" style="stroke-dasharray: 2000; stroke-dashoffset: 2000;" />
-            <!-- Size Line -->
-            <path d="${linePathSize}" fill="none" stroke="var(--purple)" stroke-width="2" stroke-dasharray="4 2" class="chart-line" style="stroke-dasharray: 2000; stroke-dashoffset: 2000; animation-delay: 0.3s;" />
-          </svg>
-        `;
+        container.addEventListener('mouseleave', () => {
+            if (crosshair) crosshair.style.opacity = 0;
+            if (tooltip) tooltip.style.opacity = 0;
+        });
     }
 
-    function renderWordCloud(words) {
-        if (!words || words.length === 0) {
-            wordCloudEl.innerHTML = '<p class="text-[var(--fg-muted)] text-xs">Not enough data to generate cloud</p>';
+    function renderWordCloud(data) {
+        if (!data || data.length === 0) {
+            wordCloudEl.innerHTML = '<p class="text-[var(--fg-muted)] text-center py-8">No frequent terms found</p>';
             return;
         }
 
-        const maxCount = words[0].count;
-        const minCount = words[words.length - 1].count;
-        const colors = ['var(--accent)', 'var(--info)', 'var(--success)', '#fff'];
+        const maxCount = Math.max(...data.map(d => d.count));
+        const minSize = 10;
+        const maxSize = 28;
 
-        wordCloudEl.innerHTML = words.map(entry => {
-            const word = entry.word;
-            const count = entry.count;
-            
-            const scale = (count - minCount) / (maxCount - minCount || 1);
-            const fontSize = 12 + (scale * 24);
-            const color = colors[Math.floor(scale * (colors.length - 1))];
-            
+        wordCloudEl.innerHTML = data.map((item, i) => {
+            const size = minSize + ((item.count / maxCount) * (maxSize - minSize));
+            const hue = 180 + (i * 10 % 40); 
             return `
-                <span 
-                    class="word-token ${searchQuery.toLowerCase() === word ? 'active-search' : ''}" 
-                    data-word="${word}"
-                    style="font-size: ${fontSize}px; color: ${color}; opacity: ${0.5 + (scale * 0.5)}"
-                    title="Count: ${count}"
-                >
-                    ${word}
+                <span class="word-token" 
+                      style="font-size: ${size}px; color: hsl(${hue}, 80%, 65%);" 
+                      data-term="${item.term}">
+                    ${item.term}
                 </span>
             `;
         }).join('');
 
-        // Add click handlers
-        document.querySelectorAll('.word-token').forEach(el => {
+        wordCloudEl.querySelectorAll('.word-token').forEach(el => {
             el.addEventListener('click', () => {
-                const word = el.dataset.word;
-                searchInput.value = word;
-                searchQuery = word;
-                
-                // Switch to logs tab and filter
-                document.querySelector('[data-tab="logs-view"]').click();
-                filterLogs();
+                searchInput.value = el.dataset.term;
+                searchQuery = el.dataset.term;
+                switchTab('logs-view');
+                fetchLogs(true);
             });
         });
     }
 
-    // --- EVENT LISTENERS ---
+    // --- EVENT HANDLERS ---
 
-    // Tabs
-    tabBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        tabBtns.forEach(b => { b.classList.remove('active'); b.classList.add('text-[var(--fg-muted)]'); });
-        btn.classList.add('active'); btn.classList.remove('text-[var(--fg-muted)]');
-        tabContents.forEach(content => { content.classList.toggle('hidden', content.id !== btn.dataset.tab); });
-        
-        if (btn.dataset.tab === 'analytics-view') {
+    function switchTab(tabId) {
+        tabBtns.forEach(btn => {
+            const isActive = btn.dataset.tab === tabId;
+            btn.classList.toggle('active', isActive);
+            btn.classList.toggle('text-[var(--fg-muted)]', !isActive);
+            btn.setAttribute('aria-selected', isActive);
+        });
+
+        tabContents.forEach(content => {
+            content.classList.toggle('hidden', content.id !== tabId);
+        });
+
+        if (tabId === 'analytics-view') {
             fetchAnalytics();
         }
-      });
+    }
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
     });
 
-    // Filters
     filterBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        filterBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active');
-        currentFilter = btn.dataset.level; 
-        filterLogs();
-      });
+        btn.addEventListener('click', () => {
+            filterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentFilter = btn.dataset.level;
+            fetchLogs(true);
+        });
     });
 
-    // Search
     let searchTimeout;
     searchInput.addEventListener('input', (e) => {
         clearTimeout(searchTimeout);
-        searchQuery = e.target.value; 
-        searchTimeout = setTimeout(filterLogs, 300); // Debounce
+        searchTimeout = setTimeout(() => {
+            searchQuery = e.target.value.trim();
+            fetchLogs(true);
+        }, 350);
     });
 
-    // Load More (Pagination)
-    loadMoreBtn.addEventListener('click', () => {
-        fetchLogs(false);
+    loadMoreBtn.addEventListener('click', () => fetchLogs(false));
+
+    resBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            resBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentResolution = btn.dataset.res;
+            fetchAnalytics();
+        });
     });
 
-    // Refresh Analytics
     refreshAnalyticsBtn.addEventListener('click', () => {
-        fetchOverview();
-        fetchAnalytics();
-    });
-
-    function filterLogs() {
-        // Reset cursor and fetch fresh data based on filters
-        fetchLogs(true);
-    }
-
-    // Resize Observer for Charts
-    window.addEventListener('resize', () => {
-      if(!document.getElementById('analytics-view').classList.contains('hidden')) {
-          fetchAnalytics();
-      }
+        refreshAnalyticsBtn.classList.add('animate-spin');
+        fetchAnalytics().finally(() => {
+            setTimeout(() => refreshAnalyticsBtn.classList.remove('animate-spin'), 500);
+        });
     });
 
     // --- INITIALIZATION ---
-    fetchOverview(); // Load stats header
-    fetchLogs(true); // Load initial logs
+    fetchOverview();
+    fetchLogs(true);
 
   </script>
 </body>
