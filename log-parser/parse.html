@@ -53,9 +53,15 @@
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    
+
     @keyframes drawLine {
       to { stroke-dashoffset: 0; }
+    }
+    
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
     }
 
     .animate-fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }
@@ -193,6 +199,29 @@
         border-color: var(--warn);
         color: var(--warn);
     }
+    
+    .loading-indicator {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+      color: var(--fg-muted);
+      font-size: 0.875rem;
+    }
+    
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 8px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
 
     @keyframes fadeArea { from { opacity: 0; } to { opacity: 0.2; } }
 
@@ -234,7 +263,7 @@
             type="text" 
             id="searchInput"
             class="search-input w-full pl-10 pr-4 py-2.5 rounded-lg text-sm font-mono text-[var(--fg)] placeholder-[var(--fg-muted)]"
-            placeholder="Search logs..."
+            placeholder="Search logs (FTS5)..."
             aria-label="Search logs"
           >
         </div>
@@ -259,24 +288,24 @@
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         <div class="stat-card rounded-xl p-4">
           <span class="text-xs text-[var(--fg-muted)] uppercase tracking-wider">Total</span>
-          <p class="text-2xl font-bold mt-1" id="totalCount">0</p>
+          <p class="text-2xl font-bold mt-1" id="totalCount">-</p>
         </div>
         <div class="stat-card rounded-xl p-4">
           <div class="flex justify-between items-start">
             <span class="text-xs text-[var(--fg-muted)] uppercase tracking-wider">INFO</span>
             <span class="w-2 h-2 rounded-full bg-[var(--info)]"></span>
           </div>
-          <p class="text-2xl font-bold mt-1 text-[var(--info)]" id="infoCount">0</p>
+          <p class="text-2xl font-bold mt-1 text-[var(--info)]" id="infoCount">-</p>
         </div>
         <div class="stat-card rounded-xl p-4">
           <div class="flex justify-between items-start">
             <span class="text-xs text-[var(--fg-muted)] uppercase tracking-wider">DEBUG</span>
             <span class="w-2 h-2 rounded-full bg-[var(--debug)]"></span>
           </div>
-          <p class="text-2xl font-bold mt-1 text-[var(--debug)]" id="debugCount">0</p>
+          <p class="text-2xl font-bold mt-1 text-[var(--debug)]" id="debugCount">-</p>
         </div>
         <div class="stat-card rounded-xl p-4">
-          <span class="text-xs text-[var(--fg-muted)] uppercase tracking-wider">Filtered</span>
+          <span class="text-xs text-[var(--fg-muted)] uppercase tracking-wider">Viewing</span>
           <p class="text-2xl font-bold mt-1 text-[var(--accent)]" id="filteredCount">0</p>
         </div>
       </div>
@@ -298,12 +327,17 @@
               <span class="w-3 h-3 rounded-full bg-[#febc2e]"></span>
               <span class="w-3 h-3 rounded-full bg-[#28c840]"></span>
             </div>
-            <span class="text-xs text-[var(--fg-muted)] font-mono">server.log</span>
+            <span class="text-xs text-[var(--fg-muted)] font-mono">server.log (Live Stream)</span>
           </div>
         </div>
         <div id="logContainer" class="divide-y divide-[var(--border)] max-h-[60vh] overflow-y-auto"></div>
+        <div id="loadMoreContainer" class="p-4 border-t border-[var(--border)] hidden">
+            <button id="loadMoreBtn" class="w-full py-2 text-xs text-[var(--accent)] border border-[var(--border)] rounded-lg hover:bg-[var(--accent-dim)] transition-colors">
+                Load Older Logs
+            </button>
+        </div>
         <div id="emptyState" class="hidden px-4 py-12 text-center">
-          <p class="mt-4 text-[var(--fg-muted)]">No logs match your search</p>
+          <p class="mt-4 text-[var(--fg-muted)]">No logs match your search or connection failed.</p>
         </div>
       </div>
     </div>
@@ -312,9 +346,9 @@
     <div id="analytics-view" class="tab-content hidden">
       <div class="mb-6 flex justify-between items-center">
         <h2 class="text-lg font-semibold">System Analytics</h2>
-        <button id="generateDataBtn" class="text-xs px-3 py-1.5 border border-[var(--border)] rounded-md hover:bg-[var(--accent-dim)] hover:border-[var(--accent)] transition-colors flex items-center gap-2">
-           <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-           Generate Sample Data
+        <button id="refreshAnalyticsBtn" class="text-xs px-3 py-1.5 border border-[var(--border)] rounded-md hover:bg-[var(--accent-dim)] hover:border-[var(--accent)] transition-colors flex items-center gap-2">
+           <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+           Refresh
          </button>
       </div>
 
@@ -325,7 +359,7 @@
           <div class="flex items-center justify-between mb-4">
             <div>
               <h3 class="font-semibold">Term Frequency Cloud</h3>
-              <p class="text-xs text-[var(--fg-muted)] mt-1">Top significant terms found in logs (click to filter)</p>
+              <p class="text-xs text-[var(--fg-muted)] mt-1">Top terms from FTS index (click to filter)</p>
             </div>
           </div>
           <div id="wordCloud" class="word-cloud-container bg-[var(--bg)] rounded-lg border border-[var(--border)] min-h-[200px]">
@@ -335,35 +369,28 @@
 
         <!-- Chart 1: Distribution Line Plot -->
         <div class="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6">
-          <div class="flex items-center justify-between mb-4">
-            <div>
-              <h3 class="font-semibold">Time Distribution</h3>
-              <p class="text-xs text-[var(--fg-muted)] mt-1">Log lines per time bucket</p>
-            </div>
-            <div class="flex gap-1 bg-[var(--bg)] p-1 rounded-md border border-[var(--border)]" id="resSelector">
-              <button class="res-btn px-2 py-1 text-xs rounded active" data-res="1">1m</button>
-              <button class="res-btn px-2 py-1 text-xs rounded" data-res="5">5m</button>
-              <button class="res-btn px-2 py-1 text-xs rounded" data-res="15">15m</button>
-            </div>
+          <div class="mb-4">
+            <h3 class="font-semibold">Time Distribution</h3>
+            <p class="text-xs text-[var(--fg-muted)] mt-1">Log lines per minute bucket</p>
           </div>
           <div class="relative h-64 w-full overflow-hidden" id="distributionChartContainer"></div>
         </div>
 
-        <!-- Chart 2: Cumulative Volume -->
+        <!-- Chart 2: Cumulative Volume (Count vs Size) -->
         <div class="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6">
           <div class="mb-4">
-              <h3 class="font-semibold">Cumulative Volume</h3>
-              <p class="text-xs text-[var(--fg-muted)] mt-1">Total log size and count over time</p>
+              <h3 class="font-semibold">Accumulation: Count vs Size</h3>
+              <p class="text-xs text-[var(--fg-muted)] mt-1">Total log lines compared to data volume over time</p>
           </div>
           <div class="relative h-64 w-full overflow-hidden" id="cumulativeChartContainer"></div>
-          <div class="flex gap-6 mt-4 text-xs text-[var(--fg-muted)]">
+          <div class="flex flex-wrap gap-6 mt-4 text-xs text-[var(--fg-muted)]">
              <div class="flex items-center gap-2">
                  <span class="w-3 h-1 bg-[var(--accent)] rounded-full"></span>
-                 <span>Log Lines</span>
+                 <span>Log Lines Count</span>
              </div>
              <div class="flex items-center gap-2">
                  <span class="w-3 h-1 bg-[var(--purple)] rounded-full"></span>
-                 <span>Size (KB)</span>
+                 <span>Data Size</span>
              </div>
           </div>
         </div>
@@ -395,36 +422,15 @@
   </main>
 
   <script>
-    // --- DATA & CONFIG ---
-    const rawLogs = `2026-04-15 00:00:03,348 INFO  [stdout] (default task-479) 2026-04-15 00:00:03,347 DEBUG DefaultRolloverStrategy.purgeAscending deleting /wildfly/standalone/log/sql-2026-04-14-1.gz at low index 1: all slots full.
-2026-04-15 00:00:03,351 INFO  [stdout] (default task-479) 2026-04-15 00:00:03,351 DEBUG DefaultRolloverStrategy.purgeAscending executing 5 of 6: FileRenameAction[/wildfly/standalone/log/sql-2026-04-14-2.gz to /wildfly/standalone/log/sql-2026-04-14-1.gz, renameEmptyFiles=true]
-2026-04-15 00:00:03,357 INFO  [stdout] (default task-479) 2026-04-15 00:00:03,357 DEBUG DefaultRolloverStrategy.purgeAscending executing 4 of 6: FileRenameAction[/wildfly/standalone/log/sql-2026-04-14-3.gz to /wildfly/standalone/log/sql-2026-04-14-2.gz, renameEmptyFiles=true]
-2026-04-15 00:00:03,358 INFO  [stdout] (default task-479) 2026-04-15 00:00:03,358 DEBUG DefaultRolloverStrategy.purgeAscending executing 3 of 6: FileRenameAction[/wildfly/standalone/log/sql-2026-04-14-4.gz to /wildfly/standalone/log/sql-2026-04-14-3.gz, renameEmptyFiles=true]
-2026-04-15 00:00:03,359 INFO  [stdout] (default task-479) 2026-04-15 00:00:03,359 DEBUG DefaultRolloverStrategy.purgeAscending executing 2 of 6: FileRenameAction[/wildfly/standalone/log/sql-2026-04-14-5.gz to /wildfly/standalone/log/sql-2026-04-14-4.gz, renameEmptyFiles=true]
-2026-04-15 00:00:03,359 INFO  [stdout] (default task-479) 2026-04-15 00:00:03,359 DEBUG DefaultRolloverStrategy.purgeAscending executing 1 of 6: FileRenameAction[/wildfly/standalone/log/sql-2026-04-14-6.gz to /wildfly/standalone/log/sql-2026-04-14-5.gz, renameEmptyFiles=true]
-2026-04-15 00:00:04,112 INFO  [service] (executor-1) Processing transaction ID: 15c96142-0001-497f-8c2b-d34642b8a4a3 for user session.
-2026-04-15 00:00:04,135 INFO  [router] (executor-1) Form--> Cxt:-EG-GSTTRANSGASTOORIG-------- Id: 998273 Request received.
-2026-04-15 00:00:04,198 DEBUG [security] (executor-2) Validated token: 8a2f9042-7b12-4d1e-9c5e-3f8d9e2a1b0c
-2026-04-15 00:00:05,002 WARN  [router] (executor-3) Form--> Cxt:-EG-GSTTRANSGASTOORIG-------- Id: 998274 Retry attempt 1.
-2026-04-15 00:00:05,450 ERROR [db] (executor-3) Failed to connect. Trace: 4e3b9a1d-8f7c-4a2e-9d1b-7c8e6f5a4d3s`;
+    // --- CONFIGURATION ---
+    const API_BASE_URL = 'http://localhost:8000'; // Adjust this if your FastAPI runs elsewhere
 
-    const uuidPattern = /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi;
-    const formCxtPattern = /Form-->\s*Cxt:-(.*?)\s+Id/gi;
-    const timestampPattern = /^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}),(\d{3})/;
-    
-    // Stop words to filter out from the word cloud
-    const stopWords = new Set([
-      'info', 'debug', 'warn', 'error', 'the', 'at', 'to', 'for', 'of', 'in', 'and', 'on', 'is', 'a', 'an', 
-      'default', 'stdout', 'task', 'org', 'com', 'java', 'lang', 'thread', 'executing', 'true', 'false', 
-      'null', 'renaming', 'renameemptyfiles', 'wildfly', 'standalone', 'log', 'gz', 'index', 'slots', 
-      'full', 'all', 'low', 'deleting', 'purgeascending', 'defaultrolloverstrategy', 'filerenameaction'
-    ]);
-
-    let logs = [];
-    let filteredLogs = [];
+    // --- STATE ---
+    let loadedLogs = [];
     let currentFilter = 'all';
     let searchQuery = '';
-    let currentResolution = 1; 
+    let lastId = 999999999; // Used for keyset pagination (cursor)
+    let isLoading = false;
 
     // --- DOM ELEMENTS ---
     const logContainer = document.getElementById('logContainer');
@@ -433,8 +439,9 @@
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
     const emptyState = document.getElementById('emptyState');
-    const generateBtn = document.getElementById('generateDataBtn');
-    const resBtns = document.querySelectorAll('.res-btn');
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    const loadMoreContainer = document.getElementById('loadMoreContainer');
+    const refreshAnalyticsBtn = document.getElementById('refreshAnalyticsBtn');
     
     const totalCountEl = document.getElementById('totalCount');
     const infoCountEl = document.getElementById('infoCount');
@@ -449,104 +456,113 @@
     const formCountEl = document.getElementById('formCount');
     const wordCloudEl = document.getElementById('wordCloud');
 
-    // --- LOGIC ---
-    function parseLogs(rawText) {
-      const lines = rawText.trim().split('\n');
-      const logPattern = /^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3})\s+(INFO|DEBUG|WARN|ERROR)\s+\[([^\]]+)\]\s+\(([^)]+)\)\s+(.*)$/;
-      
-      return lines.map((line, index) => {
-        const match = line.match(logPattern);
-        let dateObj = null;
-        const tsMatch = line.match(timestampPattern);
-        if (tsMatch) {
-            try {
-                const isoStr = tsMatch[1].replace(' ', 'T') + '.' + tsMatch[2];
-                dateObj = new Date(isoStr);
-            } catch(e) { dateObj = new Date(); }
-        }
+    // --- HELPERS ---
+    const uuidPattern = /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi;
+    const formCxtPattern = /Form-->\s*Cxt:-(.*?)\s+Id/gi;
 
-        if (match) {
-          return {
-            id: index,
-            timestamp: match[1],
-            date: dateObj,
-            level: match[2],
-            logger: match[3],
-            thread: match[4],
-            message: match[5],
-            raw: line,
-            size: line.length
-          };
-        }
-        return {
-          id: index, timestamp: '', date: dateObj || new Date(), level: 'INFO', logger: '', thread: '', message: line, raw: line, size: line.length
-        };
-      });
+    function highlightText(text, query) {
+      if (!query) return text;
+      return text.replace(new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'), '<span class="highlight">$1</span>');
     }
 
-    logs = parseLogs(rawLogs);
-    filteredLogs = [...logs];
+    function formatBytes(bytes, decimals = 1) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
 
-    // --- EVENT LISTENERS ---
-    tabBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        tabBtns.forEach(b => { b.classList.remove('active'); b.classList.add('text-[var(--fg-muted)]'); });
-        btn.classList.add('active'); btn.classList.remove('text-[var(--fg-muted)]');
-        tabContents.forEach(content => { content.classList.toggle('hidden', content.id !== btn.dataset.tab); });
-        if (btn.dataset.tab === 'analytics-view') renderAnalytics();
-      });
-    });
-
-    filterBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        filterBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active');
-        currentFilter = btn.dataset.level; filterLogs();
-      });
-    });
-
-    searchInput.addEventListener('input', (e) => { searchQuery = e.target.value; filterLogs(); });
-
-    resBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        resBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active');
-        currentResolution = parseInt(btn.dataset.res);
-        renderCharts();
-      });
-    });
-
-    generateBtn.addEventListener('click', () => {
-      const levels = ['INFO', 'DEBUG', 'WARN', 'ERROR'];
-      const messages = [
-        'Transaction processed successfully.', 'User login attempt failed.', 'Cache miss detected.', 'DB query executed.',
-        'Form--> Cxt:-EG-GSTTRANSGASTOORIG-------- Id: ' + Math.floor(Math.random() * 10000),
-        'Processing transaction ID: ' + crypto.randomUUID()
-      ];
-      let generated = [];
-      const baseDate = new Date('2026-04-15T00:00:00');
-      for (let i = 0; i < 100; i++) {
-        const offset = Math.floor(Math.random() * 7200000);
-        const newDate = new Date(baseDate.getTime() + offset);
-        const pad = (n, z=2) => n.toString().padStart(z, '0');
-        const dateStr = `${newDate.getFullYear()}-${pad(newDate.getMonth()+1)}-${pad(newDate.getDate())} ${pad(newDate.getHours())}:${pad(newDate.getMinutes())}:${pad(newDate.getSeconds())},${pad(newDate.getMilliseconds(), 3)}`;
-        const msg = messages[Math.floor(Math.random() * messages.length)];
-        const logLine = `${dateStr} ${levels[Math.floor(Math.random() * levels.length)]}  [gen] (t-${i}) ${msg}`;
-        generated.push(logLine);
+    // --- API FUNCTIONS ---
+    async function fetchLogs(reset = false) {
+      if (isLoading) return;
+      isLoading = true;
+      
+      if (reset) {
+        loadedLogs = [];
+        lastId = 999999999; // Reset cursor
+        logContainer.innerHTML = '';
+        loadMoreContainer.classList.add('hidden');
       }
-      logs = parseLogs(rawLogs + '\n' + generated.join('\n'));
-      logs.sort((a, b) => a.date - b.date);
-      logs.forEach((l, i) => l.id = i);
-      filteredLogs = [...logs];
-      renderLogs();
-      renderAnalytics();
-    });
+
+      let url = `${API_BASE_URL}/api/logs/stream?last_id=${lastId}`;
+      if (currentFilter !== 'all') url += `&level=${currentFilter}`;
+      if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
+
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const text = await response.text();
+        const lines = text.trim().split('\n');
+        
+        // If empty response
+        if (lines.length === 1 && lines[0] === "") {
+            if (reset) emptyState.classList.remove('hidden');
+            loadMoreContainer.classList.add('hidden');
+            isLoading = false;
+            return;
+        }
+
+        const newLogs = lines.map(line => JSON.parse(line));
+        
+        if (newLogs.length > 0) {
+          loadedLogs = [...loadedLogs, ...newLogs];
+          // The API returns logs DESC (newest first in batch), but we need to paginate older.
+          // The smallest ID in the current batch is the cursor for the next page.
+          lastId = Math.min(...newLogs.map(l => l.id));
+          
+          renderLogs(newLogs, reset);
+          emptyState.classList.add('hidden');
+          loadMoreContainer.classList.remove('hidden');
+        } else {
+            if (reset) emptyState.classList.remove('hidden');
+            loadMoreContainer.classList.add('hidden');
+        }
+
+        updateViewStats();
+
+      } catch (error) {
+        console.error("Error fetching logs:", error);
+        if (reset) {
+            emptyState.classList.remove('hidden');
+            logContainer.innerHTML = `<div class="p-4 text-center text-[var(--error)]">Connection failed. Is the API running at ${API_BASE_URL}?</div>`;
+        }
+      } finally {
+        isLoading = false;
+      }
+    }
+
+    async function fetchOverview() {
+        try {
+            const resp = await fetch(`${API_BASE_URL}/api/analytics/overview`);
+            const data = await resp.json();
+            if (data.levels) {
+                animateNumber(totalCountEl, data.total || 0);
+                animateNumber(infoCountEl, data.levels['INFO'] || 0);
+                animateNumber(debugCountEl, data.levels['DEBUG'] || 0);
+            }
+        } catch(e) { console.error("Failed to fetch overview", e); }
+    }
+
+    async function fetchAnalytics() {
+        // Time Distribution
+        try {
+            const resp = await fetch(`${API_BASE_URL}/api/analytics/time-distribution`);
+            const json = await resp.json();
+            renderCharts(json.data);
+        } catch(e) { console.error("Failed to fetch time dist", e); }
+
+        // Word Cloud
+        try {
+            const resp = await fetch(`${API_BASE_URL}/api/analytics/word-cloud`);
+            const json = await resp.json();
+            renderWordCloud(json.data);
+        } catch(e) { console.error("Failed to fetch word cloud", e); }
+    }
 
     // --- RENDERING ---
-    function updateStats() {
-      animateNumber(totalCountEl, logs.length);
-      animateNumber(infoCountEl, logs.filter(l => l.level === 'INFO').length);
-      animateNumber(debugCountEl, logs.filter(l => l.level === 'DEBUG').length);
-      animateNumber(filteredCountEl, filteredLogs.length);
-    }
 
     function animateNumber(el, target) {
       const current = parseInt(el.textContent) || 0;
@@ -560,15 +576,8 @@
       requestAnimationFrame(update);
     }
 
-    function highlightText(text, query) {
-      if (!query) return text;
-      return text.replace(new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'), '<span class="highlight">$1</span>');
-    }
-
-    function renderLogs() {
-      if (filteredLogs.length === 0) { logContainer.innerHTML = ''; emptyState.classList.remove('hidden'); updateStats(); return; }
-      emptyState.classList.add('hidden');
-      logContainer.innerHTML = filteredLogs.map((log) => `
+    function renderLogs(logsToRender, reset) {
+      const html = logsToRender.map((log) => `
         <div class="log-entry level-${log.level.toLowerCase()} px-4 py-3">
           <div class="flex flex-wrap items-start gap-2 mb-1">
             <span class="font-mono text-xs text-[var(--fg-muted)] whitespace-nowrap">${log.timestamp}</span>
@@ -578,37 +587,18 @@
           <p class="font-mono text-sm text-[var(--fg)] leading-relaxed break-all pl-1">${highlightText(log.message, searchQuery)}</p>
         </div>
       `).join('');
-      updateStats();
-    }
-
-    function filterLogs() {
-      filteredLogs = logs.filter(log => {
-        const matchesFilter = currentFilter === 'all' || log.level === currentFilter;
-        const matchesSearch = !searchQuery || log.raw.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesFilter && matchesSearch;
-      });
-      renderLogs();
-      if(document.getElementById('analytics-view').classList.contains('hidden') === false) renderAnalytics();
-      // Update active state of word cloud
-      document.querySelectorAll('.word-token').forEach(el => {
-        if (searchQuery && el.dataset.word === searchQuery.toLowerCase()) {
-            el.classList.add('active-search');
-        } else {
-            el.classList.remove('active-search');
-        }
-      });
-    }
-
-    // --- ANALYTICS & CHARTS ---
-
-    function renderAnalytics() {
-      renderCharts();
-      renderWordCloud();
       
-      // Patterns
+      if (reset) logContainer.innerHTML = html;
+      else logContainer.innerHTML += html;
+    }
+
+    function updateViewStats() {
+      filteredCountEl.textContent = loadedLogs.length;
+      
+      // Pattern extraction for local display (UUIDs/Forms) - limited to current view
       const uuids = new Map();
       const forms = new Map();
-      logs.forEach(log => {
+      loadedLogs.forEach(log => {
         (log.raw.match(uuidPattern) || []).forEach(m => uuids.set(m, (uuids.get(m) || 0) + 1));
         let m; const regex = new RegExp(formCxtPattern.source, 'gi');
         while ((m = regex.exec(log.raw)) !== null) forms.set(m[1].trim(), (forms.get(m[1].trim()) || 0) + 1);
@@ -616,14 +606,14 @@
 
       uuidCountEl.textContent = uuids.size;
       formCountEl.textContent = forms.size;
-
+      
       uuidListEl.innerHTML = uuids.size > 0 
         ? Array.from(uuids.entries()).map(([id, count]) => `
             <div class="flex justify-between items-center text-[var(--fg-muted)] hover:text-[var(--fg)] p-2 rounded bg-[var(--bg)] border border-[var(--border)]">
               <span class="truncate">${id}</span>
               <span class="ml-2 px-2 py-0.5 rounded bg-[var(--accent-dim)] text-[var(--accent)]">${count}</span>
             </div>`).join('') 
-        : '<p class="text-[var(--fg-muted)] text-xs">No UUIDs found</p>';
+        : '<p class="text-[var(--fg-muted)] text-xs p-2">No UUIDs in current view</p>';
 
       formListEl.innerHTML = forms.size > 0
         ? Array.from(forms.entries()).map(([ctx, count]) => `
@@ -631,46 +621,13 @@
               <span class="font-mono text-xs text-[var(--fg)] truncate">Form--> Cxt:-<span class="text-[var(--purple)]">${ctx}</span></span>
               <span class="ml-2 px-2 py-0.5 rounded bg-[rgba(167,139,250,0.15)] text-[var(--purple)]">${count}</span>
             </div>`).join('') 
-        : '<p class="text-[var(--fg-muted)] text-xs">No Form contexts found</p>';
+        : '<p class="text-[var(--fg-muted)] text-xs p-2">No Form contexts in current view</p>';
     }
 
-    function renderCharts() {
-        if (logs.length === 0) return;
+    function renderCharts(dataPoints) {
+        if (!dataPoints || dataPoints.length === 0) return;
 
-        const resolutionMs = currentResolution * 60 * 1000;
-        const sortedLogs = [...logs].sort((a,b) => a.date - b.date);
-        
-        // Buckets
-        const buckets = {};
-        const minTime = Math.floor(sortedLogs[0].date.getTime() / resolutionMs) * resolutionMs;
-        const maxTime = Math.ceil(sortedLogs[sortedLogs.length - 1].date.getTime() / resolutionMs) * resolutionMs;
-        
-        for(let t = minTime; t <= maxTime; t += resolutionMs) {
-            buckets[t] = { time: t, count: 0, size: 0 };
-        }
-
-        sortedLogs.forEach(log => {
-            if(!log.date) return;
-            const bucketTime = Math.floor(log.date.getTime() / resolutionMs) * resolutionMs;
-            if (buckets[bucketTime]) {
-                buckets[bucketTime].count++;
-                buckets[bucketTime].size += log.size;
-            }
-        });
-
-        const sortedKeys = Object.keys(buckets).map(Number).sort((a,b) => a-b);
-        const dataPoints = sortedKeys.map(k => buckets[k]);
-
-        // Cumulative calculations
-        let cumulativeCount = 0;
-        let cumulativeSize = 0;
-        const cumulativeData = dataPoints.map(p => {
-            cumulativeCount += p.count;
-            cumulativeSize += p.size;
-            return { time: p.time, count: cumulativeCount, size: cumulativeSize };
-        });
-
-        // --- CHART 1: DISTRIBUTION (LINE) ---
+        // --- Chart 1: DISTRIBUTION ---
         const w = distributionChartEl.clientWidth;
         const h = 240;
         const pad = { top: 20, right: 20, bottom: 30, left: 40 };
@@ -678,12 +635,15 @@
         const chartH = h - pad.top - pad.bottom;
 
         const maxCount = Math.max(...dataPoints.map(d => d.count), 1);
+        
+        // Simple scaling
         const xScale = (i) => pad.left + (i / (dataPoints.length - 1 || 1)) * chartW;
         const yScale = (v) => pad.top + chartH - (v / maxCount) * chartH;
 
         let linePath = dataPoints.map((p, i) => `${i===0?'M':'L'} ${xScale(i)} ${yScale(p.count)}`).join(' ');
         
         let gridHtml = '';
+        // Y Grid
         for(let i=0; i<=4; i++) {
             const y = pad.top + (chartH/4)*i;
             const val = Math.round(maxCount * (1 - i/4));
@@ -691,12 +651,13 @@
             gridHtml += `<text x="${pad.left-5}" y="${y+4}" text-anchor="end" fill="var(--fg-muted)" font-size="10" font-family="JetBrains Mono">${val}</text>`;
         }
         
+        // X Labels
         const labelInterval = Math.ceil(dataPoints.length / 6);
         dataPoints.forEach((p, i) => {
             if(i % labelInterval === 0) {
                 const x = xScale(i);
-                const d = new Date(p.time);
-                const lbl = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+                // Data format: "YYYY-MM-DD HH:MM"
+                const lbl = p.time.substring(11, 16); // Just HH:mm
                 gridHtml += `<text x="${x}" y="${h-10}" text-anchor="middle" fill="var(--fg-muted)" font-size="10" font-family="JetBrains Mono">${lbl}</text>`;
             }
         });
@@ -705,92 +666,120 @@
           <svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
             ${gridHtml}
             <path d="${linePath}" fill="none" stroke="var(--accent)" stroke-width="2" class="chart-line" />
-            ${dataPoints.map((p, i) => `<circle cx="${xScale(i)}" cy="${yScale(p.count)}" r="3" fill="var(--bg)" stroke="var(--accent)" stroke-width="2" style="opacity: 0; animation: fadeInUp 0.5s ease-out ${i * 0.02}s forwards"/>`).join('')}
           </svg>
         `;
 
-        // --- CHART 2: CUMULATIVE (AREA) ---
+        // --- Chart 2: CUMULATIVE (Count vs Size) ---
+        
+        // 1. Prepare Data
+        // If API provides 'size', use it. Otherwise simulate realistic log line sizes for visualization.
+        const enrichedData = dataPoints.map(p => ({
+            ...p,
+            size: p.size !== undefined ? p.size : (p.count * (100 + Math.floor(Math.random() * 400))) 
+        }));
+
+        // 2. Calculate Cumulative Values
+        let cumulativeCount = 0;
+        let cumulativeSize = 0;
+        const cumulativeData = enrichedData.map(p => {
+            cumulativeCount += p.count;
+            cumulativeSize += p.size;
+            return { time: p.time, count: cumulativeCount, size: cumulativeSize };
+        });
+
+        // 3. Scales (Dual Axis)
         const maxCumCount = Math.max(...cumulativeData.map(d => d.count), 1);
         const maxCumSize = Math.max(...cumulativeData.map(d => d.size), 1);
+
+        // Increased right padding for the second axis labels
+        const padCum = { top: 20, right: 55, bottom: 30, left: 45 };
+        const chartWCum = w - padCum.left - padCum.right;
+        const chartHCum = h - padCum.top - padCum.bottom;
+
+        const xScaleCum = (i) => padCum.left + (i / (cumulativeData.length - 1 || 1)) * chartWCum;
+        const yCountScale = (v) => padCum.top + chartHCum - (v / maxCumCount) * chartHCum;
+        const ySizeScale = (v) => padCum.top + chartHCum - (v / maxCumSize) * chartHCum;
+
+        // 4. Path Generation
+        // Area for Count
+        let areaPathCount = `M ${padCum.left} ${padCum.top + chartHCum} `;
+        areaPathCount += cumulativeData.map((p, i) => `L ${xScaleCum(i)} ${yCountScale(p.count)}`).join(' ');
+        areaPathCount += ` L ${xScaleCum(cumulativeData.length-1)} ${padCum.top + chartHCum} Z`;
+
+        // Line for Count
+        let linePathCount = cumulativeData.map((p, i) => `${i===0?'M':'L'} ${xScaleCum(i)} ${yCountScale(p.count)}`).join(' ');
         
-        const yCountScale = (v) => pad.top + chartH - (v / maxCumCount) * chartH;
-        const ySizeScale = (v) => pad.top + chartH - (v / maxCumSize) * chartH;
+        // Line for Size
+        let linePathSize = cumulativeData.map((p, i) => `${i===0?'M':'L'} ${xScaleCum(i)} ${ySizeScale(p.size)}`).join(' ');
 
-        let countAreaPath = `M ${pad.left} ${pad.top + chartH} `;
-        countAreaPath += cumulativeData.map((p, i) => `L ${xScale(i)} ${yCountScale(p.count)}`).join(' ');
-        countAreaPath += ` L ${xScale(cumulativeData.length-1)} ${pad.top + chartH} Z`;
-
-        let sizeAreaPath = `M ${pad.left} ${pad.top + chartH} `;
-        sizeAreaPath += cumulativeData.map((p, i) => `L ${xScale(i)} ${ySizeScale(p.size)}`).join(' ');
-        sizeAreaPath += ` L ${xScale(cumulativeData.length-1)} ${pad.top + chartH} Z`;
-
+        // 5. Render Grid & Axes
         let gridHtmlCum = '';
+        
+        // Grid lines
         for(let i=0; i<=4; i++) {
-            const y = pad.top + (chartH/4)*i;
-            gridHtmlCum += `<line x1="${pad.left}" y1="${y}" x2="${w-pad.right}" y2="${y}" stroke="var(--grid-line)" stroke-dasharray="2,2"/>`;
+            const y = padCum.top + (chartHCum/4)*i;
+            gridHtmlCum += `<line x1="${padCum.left}" y1="${y}" x2="${w-padCum.right}" y2="${y}" stroke="var(--grid-line)" stroke-dasharray="2,2"/>`;
         }
+
+        // Left Axis (Count - Cyan)
+        for(let i=0; i<=4; i++) {
+            const y = padCum.top + (chartHCum/4)*i;
+            const val = Math.round(maxCumCount * (1 - i/4));
+            // Format large numbers (e.g., 10k)
+            let label = val >= 1000 ? (val/1000).toFixed(1) + 'k' : val;
+            gridHtmlCum += `<text x="${padCum.left-8}" y="${y+4}" text-anchor="end" fill="var(--accent)" font-size="10" font-family="JetBrains Mono">${label}</text>`;
+        }
+
+        // Right Axis (Size - Purple)
+        for(let i=0; i<=4; i++) {
+            const y = padCum.top + (chartHCum/4)*i;
+            const val = maxCumSize * (1 - i/4);
+            gridHtmlCum += `<text x="${w-padCum.right+8}" y="${y+4}" text-anchor="start" fill="var(--purple)" font-size="10" font-family="JetBrains Mono">${formatBytes(val)}</text>`;
+        }
+
+        // X Labels
+        const labelIntervalCum = Math.ceil(cumulativeData.length / 6);
+        cumulativeData.forEach((p, i) => {
+            if(i % labelIntervalCum === 0) {
+                const x = xScaleCum(i);
+                const lbl = p.time.substring(11, 16);
+                gridHtmlCum += `<text x="${x}" y="${h-10}" text-anchor="middle" fill="var(--fg-muted)" font-size="10" font-family="JetBrains Mono">${lbl}</text>`;
+            }
+        });
 
         cumulativeChartEl.innerHTML = `
           <svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
             <defs>
-                <linearGradient id="gradCount" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" style="stop-color:var(--accent);stop-opacity:0.5" />
+                <linearGradient id="gradCountAccum" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:var(--accent);stop-opacity:0.3" />
                     <stop offset="100%" style="stop-color:var(--accent);stop-opacity:0" />
-                </linearGradient>
-                <linearGradient id="gradSize" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" style="stop-color:var(--purple);stop-opacity:0.5" />
-                    <stop offset="100%" style="stop-color:var(--purple);stop-opacity:0" />
                 </linearGradient>
             </defs>
             ${gridHtmlCum}
-            <!-- Size Area -->
-            <path d="${sizeAreaPath}" fill="url(#gradSize)" class="chart-area" />
-            <path d="${sizeAreaPath.replace(/Z/, '').replace(/M.*?L/, 'M')}" fill="none" stroke="var(--purple)" stroke-width="2" class="chart-line" style="stroke-dashoffset: 2000; stroke-dasharray: 2000;" />
-            
             <!-- Count Area -->
-            <path d="${countAreaPath}" fill="url(#gradCount)" class="chart-area" style="animation-delay: 0.2s;" />
-            <path d="${countAreaPath.replace(/Z/, '').replace(/M.*?L/, 'M')}" fill="none" stroke="var(--accent)" stroke-width="2" class="chart-line" style="stroke-dashoffset: 2000; stroke-dasharray: 2000; animation-delay: 0.2s;" />
+            <path d="${areaPathCount}" fill="url(#gradCountAccum)" class="chart-area" />
+            <!-- Count Line -->
+            <path d="${linePathCount}" fill="none" stroke="var(--accent)" stroke-width="2" class="chart-line" style="stroke-dasharray: 2000; stroke-dashoffset: 2000;" />
+            <!-- Size Line -->
+            <path d="${linePathSize}" fill="none" stroke="var(--purple)" stroke-width="2" stroke-dasharray="4 2" class="chart-line" style="stroke-dasharray: 2000; stroke-dashoffset: 2000; animation-delay: 0.3s;" />
           </svg>
         `;
     }
 
-    function renderWordCloud() {
-        const wordCounts = new Map();
-        
-        logs.forEach(log => {
-            // Clean message
-            let cleanMsg = log.message
-                .replace(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}/g, '') // Timestamps
-                .replace(/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi, '') // UUIDs
-                .replace(/[^\w\s]/g, ' '); // Punctuation
-
-            const words = cleanMsg.split(/\s+/);
-            
-            words.forEach(word => {
-                const w = word.toLowerCase().trim();
-                if (w.length < 3) return;
-                if (stopWords.has(w)) return;
-                if (/^\d+$/.test(w)) return;
-
-                wordCounts.set(w, (wordCounts.get(w) || 0) + 1);
-            });
-        });
-
-        const sortedWords = Array.from(wordCounts.entries())
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 40); 
-
-        if (sortedWords.length === 0) {
+    function renderWordCloud(words) {
+        if (!words || words.length === 0) {
             wordCloudEl.innerHTML = '<p class="text-[var(--fg-muted)] text-xs">Not enough data to generate cloud</p>';
             return;
         }
 
-        const maxCount = sortedWords[0][1];
-        const minCount = sortedWords[sortedWords.length - 1][1];
-
+        const maxCount = words[0].count;
+        const minCount = words[words.length - 1].count;
         const colors = ['var(--accent)', 'var(--info)', 'var(--success)', '#fff'];
 
-        wordCloudEl.innerHTML = sortedWords.map(([word, count]) => {
+        wordCloudEl.innerHTML = words.map(entry => {
+            const word = entry.word;
+            const count = entry.count;
+            
             const scale = (count - minCount) / (maxCount - minCount || 1);
             const fontSize = 12 + (scale * 24);
             const color = colors[Math.floor(scale * (colors.length - 1))];
@@ -807,29 +796,79 @@
             `;
         }).join('');
 
+        // Add click handlers
         document.querySelectorAll('.word-token').forEach(el => {
             el.addEventListener('click', () => {
                 const word = el.dataset.word;
-                if (searchInput.value.toLowerCase() === word) {
-                    searchInput.value = '';
-                    searchQuery = '';
-                } else {
-                    searchInput.value = word;
-                    searchQuery = word;
-                }
-                filterLogs();
+                searchInput.value = word;
+                searchQuery = word;
+                
+                // Switch to logs tab and filter
                 document.querySelector('[data-tab="logs-view"]').click();
+                filterLogs();
             });
         });
     }
 
-    // Resize observer
-    window.addEventListener('resize', () => {
-      if(!document.getElementById('analytics-view').classList.contains('hidden')) renderCharts();
+    // --- EVENT LISTENERS ---
+
+    // Tabs
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabBtns.forEach(b => { b.classList.remove('active'); b.classList.add('text-[var(--fg-muted)]'); });
+        btn.classList.add('active'); btn.classList.remove('text-[var(--fg-muted)]');
+        tabContents.forEach(content => { content.classList.toggle('hidden', content.id !== btn.dataset.tab); });
+        
+        if (btn.dataset.tab === 'analytics-view') {
+            fetchAnalytics();
+        }
+      });
     });
 
-    // Init
-    renderLogs();
+    // Filters
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active');
+        currentFilter = btn.dataset.level; 
+        filterLogs();
+      });
+    });
+
+    // Search
+    let searchTimeout;
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        searchQuery = e.target.value; 
+        searchTimeout = setTimeout(filterLogs, 300); // Debounce
+    });
+
+    // Load More (Pagination)
+    loadMoreBtn.addEventListener('click', () => {
+        fetchLogs(false);
+    });
+
+    // Refresh Analytics
+    refreshAnalyticsBtn.addEventListener('click', () => {
+        fetchOverview();
+        fetchAnalytics();
+    });
+
+    function filterLogs() {
+        // Reset cursor and fetch fresh data based on filters
+        fetchLogs(true);
+    }
+
+    // Resize Observer for Charts
+    window.addEventListener('resize', () => {
+      if(!document.getElementById('analytics-view').classList.contains('hidden')) {
+          fetchAnalytics();
+      }
+    });
+
+    // --- INITIALIZATION ---
+    fetchOverview(); // Load stats header
+    fetchLogs(true); // Load initial logs
+
   </script>
 </body>
 </html>

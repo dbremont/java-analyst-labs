@@ -40,13 +40,25 @@ def create_database():
     ''')
 
     # 2. Create FTS5 Virtual Table (Inverted Index for Search)
+    # Note: Added 'tokenize="porter unicode61"' to handle word stemming (e.g., "error" matches "errors")
     cur.execute('''
         CREATE VIRTUAL TABLE logs_fts USING fts5(
-            message, logger, content='logs', content_rowid='id'
+            message, logger, 
+            content='logs', 
+            content_rowid='id',
+            tokenize="porter unicode61"
         )
     ''')
 
-    # 3. Create Triggers to keep FTS in sync automatically
+    # 3. Create Vocabulary Table (Required for Word Cloud Analytics)
+    # This creates a view into the FTS index listing all terms and their counts.
+    cur.execute('''
+        CREATE VIRTUAL TABLE logs_fts_vocab USING fts5vocab(
+            logs_fts, 'row'
+        )
+    ''')
+
+    # 4. Create Triggers to keep FTS in sync automatically
     cur.execute('''
         CREATE TRIGGER logs_ai AFTER INSERT ON logs BEGIN
             INSERT INTO logs_fts(rowid, message, logger) 
@@ -68,8 +80,8 @@ def parse_line(line):
         return (
             data['timestamp'], 
             data['level'], 
-            data['logger'], 
-            data['thread'], 
+            data['logger'],
+            data['thread'],
             data['message'], 
             line.strip()
         )
