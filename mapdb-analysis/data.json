@@ -1,0 +1,53 @@
+[ {
+  "className" : "MapDBFuItemPartidas",
+  "file" : "/home/dvictoriano/Code/hacienda/sigef/modulos/uepex/uepex-impl/src/main/java/dr/gov/sigef/uepex/ejecuciondelgasto/formulario/item/partidas/MapDBFuItemPartidas.java",
+  "fields" : [ {
+    "name" : "TABLA",
+    "value" : "UX_FU_ITEM_PARTIDAS"
+  }, {
+    "name" : "PK_CODIGO",
+    "value" : "COD_ITEM_PARTIDA"
+  }, {
+    "name" : "PK_MAESTRA_CODIGO_ITEM",
+    "value" : "COD_ITEM"
+  }, {
+    "name" : "PK_MAESTRA_ID_FORMULARIO",
+    "value" : "ID_FORMULARIO"
+  }, {
+    "name" : "ATR_MONTO_CONSUMIDO",
+    "value" : "VLR_MONTO_CONSUMIDO"
+  }, {
+    "name" : "ATR_MONTO_MCONTRATO",
+    "value" : "VLR_MONTO_CONTRATO"
+  }, {
+    "name" : "ATR_RA_ID_FORMULARIO",
+    "value" : "RA_ID_FORMULARIO"
+  }, {
+    "name" : "ATR_RA_COD_ITEM_PARTIDA",
+    "value" : "RA_COD_ITEM_PARTIDA"
+  }, {
+    "name" : "ATR_RA_COD_ITEM",
+    "value" : "RA_COD_ITEM"
+  }, {
+    "name" : "ATR_RM_ID_FORMULARIO",
+    "value" : "RM_ID_FORMULARIO"
+  }, {
+    "name" : "ATR_RM_COD_ITEM_PARTIDA",
+    "value" : "RM_COD_ITEM_PARTIDA"
+  }, {
+    "name" : "ATR_RM_COD_ITEM",
+    "value" : "RM_COD_ITEM"
+  }, {
+    "name" : "ATR_PERIODO",
+    "value" : "COD_PERIODO"
+  }, {
+    "name" : "ATR_CONVENIO",
+    "value" : "ID_CONVENIO"
+  }, {
+    "name" : "ATR_PRESUPUESTO_PARTIDA",
+    "value" : "COD_PRESUP_PARTIDA"
+  }, {
+    "name" : "ATR_TIP_AUTOMATICO",
+    "value" : "TIP_AUTOMATICO"
+  } ]
+} ]
